@@ -6,6 +6,10 @@ var stocks       = [];
 var watchlist    = [];
 var screenerRunning = false;
 
+// 信號 badge class 對照（全域，所有函式都能用）
+var BTMAP = {break:'b-break',whale:'b-whale',strong:'b-strong',wait:'b-wait',risk:'b-risk'};
+var RMAP  = {'低':'risk-low','中':'risk-mid','高':'risk-high'};
+
 // ── 示範資料（FinMind 失敗時備援）──
 function genDemoStock(code, idx){
   var price = Math.round(50 + Math.random()*1000);
@@ -178,13 +182,12 @@ function setFeatured(code){
   featuredCode = code;
   var all = getDisplayStocks();
   var s   = all.find(function(x){ return x.code===code; }) || genDemoStock(code,0);
-  var btmap = {break:'b-break',whale:'b-whale',strong:'b-strong',wait:'b-wait',risk:'b-risk'};
   var el;
 
   el = document.getElementById('feat-name'); if(el) el.textContent = s.name;
   el = document.getElementById('feat-code'); if(el) el.textContent = s.code + ' · ' + s.sector;
   var bEl = document.getElementById('feat-badge');
-  if(bEl){ bEl.className='badge '+(btmap[s.sigType]||'b-strong'); bEl.textContent=s.sig; }
+  if(bEl){ bEl.className='badge '+(BTMAP[s.sigType]||'b-strong'); bEl.textContent=s.sig; }
   el = document.getElementById('feat-reason'); if(el) el.textContent = s.reason;
   el = document.getElementById('feat-entry');  if(el) el.textContent = s.entry;
   el = document.getElementById('feat-target'); if(el) el.textContent = s.t1+'/'+s.t2;
@@ -251,11 +254,11 @@ function renderDashTable(){
       '<td><div class="tk">'+s.code+'</div></td>' +
       '<td><span class="pv">'+s.price+'</span></td>' +
       '<td class="'+cc+'">'+(s.chg>0?'▲+':'▼')+s.chg+'%</td>' +
-      '<td><span class="badge '+(btmap[s.sigType]||'b-strong')+'">'+s.sig+'</span></td>' +
+      '<td><span class="badge '+(BTMAP[s.sigType]||'b-strong')+'">'+s.sig+'</span></td>' +
       '<td><div class="ms"><span style="font-family:var(--mono);font-weight:700;color:'+barC+';min-width:22px;">'+s.ai+'</span>' +
         '<div class="mb"><div class="mf" style="width:'+s.ai+'%;background:'+barC+';"></div></div></div></td>' +
       '<td style="font-family:var(--mono);color:var(--accent2);font-weight:700;">'+s.boom+'%</td>' +
-      '<td class="'+(rmap[s.riskLvl]||'')+'">'+s.riskLvl+'</td>' +
+      '<td class="'+(RMAP[s.riskLvl]||'')+'">'+s.riskLvl+'</td>' +
       '<td style="font-family:var(--mono);color:var(--green);">'+s.entry+'</td>' +
       '<td><button class="btn btn-sm" onclick="event.stopPropagation();openModal(\''+s.code+'\')">詳情</button></td>' +
     '</tr>';
@@ -284,8 +287,6 @@ function renderFullTable(){
     list.sort(function(a,b){ return b[fullSortKey] - a[fullSortKey]; });
   }
 
-  var btmap = {break:'b-break',whale:'b-whale',strong:'b-strong',wait:'b-wait',risk:'b-risk'};
-  var rmap  = {'低':'risk-low','中':'risk-mid','高':'risk-high'};
 
   // 更新計數
   var totalEl = document.getElementById('scan-result-count');
@@ -311,11 +312,11 @@ function renderFullTable(){
       '<td><div class="ms"><span style="font-family:var(--mono);font-weight:700;color:'+barC+';min-width:22px;">'+s.ai+'</span>' +
         '<div class="mb" style="width:40px;"><div class="mf" style="width:'+s.ai+'%;background:'+barC+';"></div></div></div></td>' +
       '<td style="font-family:var(--mono);color:var(--accent2);font-weight:700;">'+s.boom+'%</td>' +
-      '<td><span class="badge '+(btmap[s.sigType]||'b-strong')+'">'+s.sig+'</span></td>' +
+      '<td><span class="badge '+(BTMAP[s.sigType]||'b-strong')+'">'+s.sig+'</span></td>' +
       '<td style="font-family:var(--mono);color:var(--green);">'+s.entry+'</td>' +
       '<td style="font-family:var(--mono);color:var(--accent);">'+s.t1+'</td>' +
       '<td style="font-family:var(--mono);color:var(--red);">'+s.sl+'</td>' +
-      '<td class="'+(rmap[s.riskLvl]||'')+'">'+s.riskLvl+'</td>' +
+      '<td class="'+(RMAP[s.riskLvl]||'')+'">'+s.riskLvl+'</td>' +
       '<td><button class="btn btn-sm" onclick="openModal(\''+s.code+'\')">詳情</button></td>' +
     '</tr>';
   }).join('') || '<tr><td colspan="17" class="empty">無符合條件的股票（AI分≥'+CFG.ai_min+'）</td></tr>';
@@ -507,26 +508,24 @@ async function runLiveScreener(){
   var barEl    = document.getElementById('screener-bar');
 // ── 導覽切換（含權限檢查）──
 function goTab(tab, btn){
-  // 定義哪些 tab 需要哪個 perm
-  var permMap = {
-    signals: 'signals',
-    robots:  'robots',
-    report:  'report',
-  };
+  // 管理員無限制，直接跳過權限檢查
+  var isAdmin = currentUser && currentUser.role === 'admin';
 
-  // 檢查權限
-  var requiredPerm = permMap[tab];
-  if(requiredPerm && !checkPerm(requiredPerm)){
-    // 切換顯示但內容換成鎖定畫面
-    document.querySelectorAll('.tab-page').forEach(function(p){ p.classList.remove('active'); });
-    document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('active'); });
-    var tabEl = document.getElementById('tab-'+tab);
-    if(tabEl){
-      tabEl.classList.add('active');
-      showAccessDenied(tabEl);
+  if(!isAdmin){
+    // 一般用戶才需要檢查權限
+    var permMap = { signals:'signals', robots:'robots', report:'report' };
+    var requiredPerm = permMap[tab];
+    if(requiredPerm){
+      var hasPerm = currentUser && currentUser.perms && currentUser.perms[requiredPerm];
+      if(!hasPerm){
+        document.querySelectorAll('.tab-page').forEach(function(p){ p.classList.remove('active'); });
+        document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('active'); });
+        var lockEl = document.getElementById('tab-'+tab);
+        if(lockEl){ lockEl.classList.add('active'); showAccessDenied(lockEl); }
+        if(btn) btn.classList.add('active');
+        return;
+      }
     }
-    if(btn) btn.classList.add('active');
-    return;
   }
 
   document.querySelectorAll('.tab-page').forEach(function(p){ p.classList.remove('active'); });
@@ -536,7 +535,8 @@ function goTab(tab, btn){
   if(btn) btn.classList.add('active');
 
   if(tab === 'profile') renderProfile();
-  if(tab === 'admin')   { renderUserTable(); renderWatchlist(); }
+  if(tab === 'admin')   { renderUserTable(); renderWatchlist(); updateCacheStatus(); }
+  if(tab === 'report')  { renderReportList(); }
 }
 
 // ── 匯出 CSV ──
