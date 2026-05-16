@@ -4,12 +4,12 @@ on:
   schedule:
     - cron: '30 7 * * 1-5'   # 15:30 第一批掃描
     - cron: '30 8 * * 1-5'   # 16:30 第二批掃描
-    - cron: '30 9 * * 1-5'   # 17:30 第三批掃描+機器人執行
+    - cron: '30 9 * * 1-5'   # 17:30 第三批掃描+機器人+MOPS公告
 
   workflow_dispatch:
     inputs:
       batch:
-        description: '批次 (1=前290檔, 2=291-580, 3=581-870, robots=只跑機器人)'
+        description: '批次 (1/2/3/robots/mops/all)'
         required: true
         default: '1'
 
@@ -26,10 +26,10 @@ jobs:
           python-version: '3.11'
 
       - name: 安裝套件
-        run: pip install requests
+        run: pip install requests beautifulsoup4 lxml
 
       - name: 執行股票掃描
-        if: ${{ github.event.inputs.batch != 'robots' }}
+        if: ${{ github.event.inputs.batch != 'robots' && github.event.inputs.batch != 'mops' }}
         env:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
           SUPABASE_URL:  ${{ secrets.SUPABASE_URL }}
@@ -37,9 +37,22 @@ jobs:
           BATCH_NUM:     ${{ github.event.inputs.batch || '0' }}
         run: python scripts/daily_scan.py
 
+      - name: 爬取 MOPS 公開資訊觀測站公告
+        # 每天 17:30 或手動選 mops/all 時執行
+        if: >
+          github.event.schedule == '30 9 * * 1-5' ||
+          github.event.inputs.batch == 'mops' ||
+          github.event.inputs.batch == 'all'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python scripts/fetch_mops.py
+
       - name: 執行機器人盤後操作
-        # 第三批（17:30）或手動選 robots 時執行
-        if: ${{ github.event.schedule == '30 9 * * 1-5' || github.event.inputs.batch == 'robots' || github.event.inputs.batch == '3' }}
+        if: >
+          github.event.schedule == '30 9 * * 1-5' ||
+          github.event.inputs.batch == 'robots' ||
+          github.event.inputs.batch == 'all'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
