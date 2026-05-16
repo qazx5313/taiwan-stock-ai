@@ -388,7 +388,7 @@ def save_batch(records):
         chunk = records[i:i+50]
         try:
             r = requests.post(
-                SUPABASE_URL + '/rest/v1/stock_scores',
+                SUPABASE_URL + '/rest/v1/stock_scores?on_conflict=symbol,date',
                 headers=headers, json=chunk, timeout=30
             )
             if r.status_code not in (200, 201):
