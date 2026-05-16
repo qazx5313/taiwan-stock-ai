@@ -43,7 +43,10 @@ function genDemoStock(code, idx){
 }
 
 function getDisplayStocks(){
+  // 只在 FinMind 清單載入完成後才產生示範資料
   if(stocks.length > 0) return stocks;
+  if(!stockListLoaded || TOP300.length === 0) return []; // 清單未載入，回傳空
+  // 用載入的真實清單產生示範資料（至少比亂填的好）
   return TOP300.slice(0,30).map(function(code,i){ return genDemoStock(code,i); }).sort(function(a,b){ return b.ai-a.ai; });
 }
 
@@ -225,10 +228,21 @@ function renderDashTable(){
   else if(dashFilterKey==='whale') list = list.filter(function(s){ return s.sigType==='whale'; });
   else if(dashFilterKey==='low')   list = list.filter(function(s){ return s.riskLvl==='低'; });
 
-  var btmap = {break:'b-break',whale:'b-whale',strong:'b-strong',wait:'b-wait',risk:'b-risk'};
-  var rmap  = {'低':'risk-low','中':'risk-mid','高':'risk-high'};
   var tbody = document.getElementById('dash-tbody');
   if(!tbody) return;
+
+  var list = getDisplayStocks();
+
+  // 股票清單還在載入中
+  if(!stockListLoaded && stocks.length === 0){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--accent2);font-family:var(--mono);font-size:11px;">⟳ 正在從 FinMind 載入上市上櫃清單...</td></tr>';
+    return;
+  }
+  // 清單載入完成但尚未掃描
+  if(stocks.length === 0 && list.length === 0){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text3);font-size:12px;">清單已載入 '+TOP300.length+' 檔，請點「掃描」取得真實 AI 分析</td></tr>';
+    return;
+  }
   tbody.innerHTML = list.slice(0,20).map(function(s){
     var cc   = s.chg>0?'up':s.chg<0?'dn':'neu';
     var barC = s.ai>=80?'#00d4ff':s.ai>=65?'#1a6fff':'#f5c518';
@@ -307,9 +321,105 @@ function renderFullTable(){
   }).join('') || '<tr><td colspan="17" class="empty">無符合條件的股票（AI分≥'+CFG.ai_min+'）</td></tr>';
 }
 
-// ── 掃描器 ──
+// ── 掃描器（快取優先模式）──
 async function runScreener(){
   if(screenerRunning){ toast('掃描進行中，請稍候'); return; }
+
+  // 1. 先嘗試從 Supabase 讀今日快取（0 次 FinMind API）
+  if(getSBUrl() && getSBKey()){
+    var loaded = await loadFromSupabase();
+    if(loaded){ return; }
+  }
+
+  // 2. Supabase 無資料 → 即時用 FinMind 掃（消耗 API 次數）
+  toast('Supabase 無快取，改用即時掃描...');
+  await runLiveScreener();
+}
+
+// 從 Supabase 讀取今日/昨日快取結果
+async function loadFromSupabase(){
+  var sbUrl = getSBUrl(); var sbKey = getSBKey();
+  if(!sbUrl || !sbKey) return false;
+
+  var statusEl = document.getElementById('screener-status');
+  var prog = document.getElementById('screener-progress');
+  if(prog) prog.style.display = 'block';
+  if(statusEl) statusEl.textContent = '從 Supabase 讀取今日快取...';
+
+  try{
+    // 取最新一天的資料
+    var r = await fetch(sbUrl + '/rest/v1/stock_scores?select=*&order=total_score.desc&limit=500', {
+      headers:{ 'apikey':sbKey, 'Authorization':'Bearer '+sbKey }
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var data = await r.json();
+
+    if(!data || data.length === 0){
+      if(prog) prog.style.display = 'none';
+      return false;
+    }
+
+    // 轉成前端格式
+    stocks = data.map(function(d){
+      return {
+        code:       d.symbol,
+        name:       d.name || getStockName(d.symbol) || d.symbol,
+        price:      d.price       || 0,
+        chg:        d.chg_pct     || 0,
+        vol:        d.volume_b    || 0,
+        sector:     d.sector      || getStockSector(d.symbol),
+        tech:       d.tech_score  || 0,
+        chip:       d.chip_score  || 0,
+        vol_score:  d.vol_score   || 0,
+        risk_score: d.risk_score  || 0,
+        ai:         d.total_score || 0,
+        boom:       d.boom_prob   || 0,
+        sig:        d.signal      || '—',
+        sigType:    d.signal_type || 'wait',
+        entry:      d.entry_price || 0,
+        t1:         d.target1     || 0,
+        t2:         d.target2     || 0,
+        sl:         d.stop_loss   || 0,
+        riskLvl:    d.risk_level  || '中',
+        reason:     d.reason      || '',
+        tech_detail: d.tech_detail || {},
+        chip_detail: d.chip_detail || {},
+        candles:    [],
+      };
+    }).filter(function(s){ return s.code && s.price > 0; });
+
+    if(prog) prog.style.display = 'none';
+
+    if(stocks.length === 0) return false;
+
+    stocks.sort(function(a,b){ return b.ai - a.ai; });
+    var matched = stocks.filter(function(s){ return s.ai >= CFG.ai_min; });
+
+    var sc = document.getElementById('scan-result-count');
+    var mc = document.getElementById('scan-match-count');
+    if(sc) sc.textContent = stocks.length;
+    if(mc) mc.textContent = matched.length;
+    document.getElementById('st-count').textContent  = stocks.length;
+    document.getElementById('st-update').textContent = new Date().toLocaleTimeString('zh-TW');
+
+    renderDashTable(); renderFullTable();
+    if(stocks.length > 0) setFeatured(stocks[0].code);
+
+    // 顯示快取日期
+    var cacheDate = data[0] && data[0].date ? data[0].date : '—';
+    toast('✅ 讀取快取：'+stocks.length+'檔（'+cacheDate+'）');
+    return true;
+
+  } catch(e){
+    console.warn('Supabase 讀取失敗:', e.message);
+    if(prog) prog.style.display = 'none';
+    return false;
+  }
+}
+
+// 即時掃描（消耗 FinMind API，用於 Supabase 無資料時）
+async function runLiveScreener(){
+  if(screenerRunning){ toast('掃描進行中'); return; }
 
   // 等待股票清單載入
   if(!stockListLoaded){
@@ -321,12 +431,14 @@ async function runScreener(){
   var mode   = modeEl ? modeEl.value : 'batch1';
   var allCodes = TOP300.length > 0 ? TOP300 : Object.keys(LISTED_STOCKS);
 
+  // 每小時 600 次，每檔 2次（K線+籌碼）= 最多 295 檔/小時
+  // 加上安全邊界，每批最多 50 檔（100次）
   var list;
   if(mode === 'watchlist')    list = watchlist.length>0 ? watchlist : allCodes.slice(0,30);
-  else if(mode === 'batch2')  list = allCodes.slice(100,200);
-  else if(mode === 'batch3')  list = allCodes.slice(200,300);
-  else if(mode === 'top_all') list = allCodes.slice(0,500);
-  else                        list = allCodes.slice(0,100);  // batch1
+  else if(mode === 'batch2')  list = allCodes.slice(50,100);
+  else if(mode === 'batch3')  list = allCodes.slice(100,150);
+  else if(mode === 'top_all') list = allCodes.slice(0,290); // 最多290（580次）
+  else                        list = allCodes.slice(0,50);  // batch1
 
   screenerRunning = true;
   var prog = document.getElementById('screener-progress');
@@ -334,34 +446,39 @@ async function runScreener(){
   var barEl    = document.getElementById('screener-bar');
   if(prog) prog.style.display = 'block';
 
+  // 顯示 API 次數預估
+  var estCalls = list.length * 2;
+  if(statusEl) statusEl.textContent = '預估消耗 '+estCalls+' 次 API（上限600次/小時）';
+  await sleep(1500);
+
   stocks = [];
+  var apiUsed = 0;
+
   for(var i=0; i<list.length; i++){
     var sym   = list[i];
     var sname = getStockName(sym) || sym;
-    if(statusEl) statusEl.textContent = '分析 ('+(i+1)+'/'+list.length+')：'+sname+'（'+sym+'）';
+    if(statusEl) statusEl.textContent = '分析 ('+(i+1)+'/'+list.length+')：'+sname+' | 已用 '+apiUsed+' 次API';
     if(barEl)    barEl.style.width    = Math.round((i+1)/list.length*100) + '%';
 
     try{
       var candles = await finmindCandles(sym, 120);
+      apiUsed++;
       if(candles.length >= 20){
         var scored = computeScore(sym, sname, candles);
-        // 取籌碼
         try{
           var chips = await finmindChips(sym);
+          apiUsed++;
           scored.chip_detail.foreign = chips.foreign;
           scored.chip_detail.trust   = chips.trust;
           scored.chip_detail.dealer  = chips.dealer;
           scored.chip = calcChipScore(scored.chip_detail);
-          scored.ai   = Math.min(100, scored.tech + scored.chip + scored.vol_score + scored.risk_score);
+          scored.ai   = Math.min(100, scored.tech+scored.chip+scored.vol_score+scored.risk_score);
           scored.boom = calcBoom(scored);
-        } catch(e){ /* 籌碼失敗不影響主流程 */ }
+        } catch(e){}
         stocks.push(scored);
-      } else {
-        stocks.push(genDemoStock(sym, i));
       }
     } catch(e){
       console.warn(sym, e.message);
-      stocks.push(genDemoStock(sym, i));
     }
     await sleep(200);
   }
@@ -375,19 +492,19 @@ async function runScreener(){
   var mc = document.getElementById('scan-match-count');
   if(sc) sc.textContent = stocks.length;
   if(mc) mc.textContent = matched.length;
+  document.getElementById('st-count').textContent  = stocks.length;
+  document.getElementById('st-update').textContent = new Date().toLocaleTimeString('zh-TW');
 
-  var countEl = document.getElementById('st-count');
-  var updEl   = document.getElementById('st-update');
-  if(countEl) countEl.textContent = stocks.length;
-  if(updEl)   updEl.textContent   = new Date().toLocaleTimeString('zh-TW');
-
-  renderDashTable();
-  renderFullTable();
+  renderDashTable(); renderFullTable();
   if(stocks.length > 0) setFeatured(stocks[0].code);
   await sbSaveScores();
-  toast('掃描完成：'+stocks.length+'檔掃描，'+matched.length+'檔符合條件');
+  toast('掃描完成：'+stocks.length+'檔（使用 '+apiUsed+' 次API）');
 }
 
+  screenerRunning = true;
+  var prog = document.getElementById('screener-progress');
+  var statusEl = document.getElementById('screener-status');
+  var barEl    = document.getElementById('screener-bar');
 // ── 導覽切換（含權限檢查）──
 function goTab(tab, btn){
   // 定義哪些 tab 需要哪個 perm
@@ -607,4 +724,102 @@ function startClock(){
   var el = document.getElementById('clock');
   if(!el) return;
   setInterval(function(){ el.textContent = new Date().toLocaleTimeString('zh-TW'); }, 1000);
+}
+
+// ── 管理員：單股即時查詢（消耗2次API）──
+var adminApiUsed = 0;
+
+async function adminSearchStock(){
+  var inp  = document.getElementById('single-search');
+  var code = (inp ? inp.value.trim() : '').toUpperCase();
+  if(!code){ toast('請輸入股票代號'); return; }
+
+  var resEl = document.getElementById('single-result');
+  var usageEl = document.getElementById('api-usage');
+  if(resEl) resEl.innerHTML = '<span class="loading">◌</span> 查詢中...';
+
+  try{
+    var name    = getStockName(code) || code;
+    var sector  = getStockSector(code) || '—';
+    var candles = await finmindCandles(code, 120);
+    adminApiUsed++;
+
+    if(candles.length < 20){
+      if(resEl) resEl.textContent = '無足夠K線資料（可能代號錯誤或已下市）';
+      return;
+    }
+
+    var chips = await finmindChips(code);
+    adminApiUsed++;
+    if(usageEl) usageEl.textContent = 'API 消耗：' + adminApiUsed + ' 次（本次共用）';
+
+    var scored = computeScore(code, name, candles);
+    scored.chip_detail.foreign = chips.foreign;
+    scored.chip_detail.trust   = chips.trust;
+    scored.chip_detail.dealer  = chips.dealer;
+    scored.chip    = calcChipScore(scored.chip_detail);
+    scored.sector  = sector;
+    scored.ai      = Math.min(100, scored.tech + scored.chip + scored.vol_score + scored.risk_score);
+    scored.boom    = calcBoom(scored);
+
+    // 加入或更新 stocks 列表
+    var idx = stocks.findIndex(function(s){ return s.code === code; });
+    if(idx >= 0) stocks[idx] = scored;
+    else stocks.unshift(scored);
+
+    // 存 Supabase
+    await sbSaveScores();
+
+    if(resEl) resEl.innerHTML =
+      '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;margin-top:4px;">' +
+      '<div style="font-weight:700;color:var(--text1);margin-bottom:4px;">' + escHtml(name) + ' (' + code + ')</div>' +
+      '<div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:6px;">' + sector + '</div>' +
+      '<div style="display:flex;gap:12px;font-size:11px;">' +
+        '<span>現價 <b style="color:var(--text1);">' + scored.price + '</b></span>' +
+        '<span>AI分 <b style="color:var(--accent);">' + scored.ai + '</b></span>' +
+        '<span>信號 <b style="color:var(--accent2);">' + scored.sig + '</b></span>' +
+        '<span>風險 <b class="risk-' + (scored.riskLvl==='低'?'low':scored.riskLvl==='中'?'mid':'high') + '">' + scored.riskLvl + '</b></span>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--text3);margin-top:6px;">' + scored.reason + '</div>' +
+      '<button class="btn btn-sm" style="margin-top:8px;" onclick="openModal(\'' + code + '\')">詳細分析</button>' +
+      '</div>';
+
+    renderDashTable();
+    renderFullTable();
+    toast(name + ' 查詢完成（消耗2次API）');
+
+  } catch(e){
+    if(resEl) resEl.textContent = '查詢失敗：' + e.message;
+    toast('查詢失敗：' + e.message);
+  }
+}
+
+// ── 快取狀態顯示 ──
+async function updateCacheStatus(){
+  var el = document.getElementById('cache-status');
+  if(!el || !getSBUrl()) return;
+
+  try{
+    var r = await fetch(getSBUrl() + '/rest/v1/stock_scores?select=date,count&order=date.desc&limit=1', {
+      headers:{'apikey':getSBKey(),'Authorization':'Bearer '+getSBKey()}
+    });
+    if(r.ok){
+      var d = await r.json();
+      if(d && d.length > 0){
+        var latestDate = d[0].date || '—';
+        var today = new Date().toISOString().split('T')[0];
+        var isToday = latestDate === today;
+        el.innerHTML =
+          '<span style="color:' + (isToday?'var(--green)':'var(--gold)') + ';">' +
+          (isToday ? '✅ 今日資料已更新' : '⚠️ 最新資料：'+latestDate) +
+          '</span>';
+        // 自動載入快取
+        await loadFromSupabase();
+      } else {
+        el.textContent = '尚無資料（等待 GitHub Actions 首次執行）';
+      }
+    }
+  } catch(e){
+    el.textContent = '無法連線 Supabase';
+  }
 }

@@ -131,6 +131,15 @@ function enterApp(){
   var repAdmin = document.getElementById('report-admin-panel');
   if(repAdmin) repAdmin.style.display = (u.role === 'admin') ? '' : 'none';
 
+  // 掃描按鈕權限控制
+  var isAdmin = (u.role === 'admin');
+  var dashScanBtn  = document.getElementById('dash-scan-btn');
+  var scanAdminBtn = document.getElementById('scan-admin-btn');
+  var scanUserInfo = document.getElementById('scan-user-info');
+  if(dashScanBtn)  dashScanBtn.style.display  = isAdmin ? '' : 'none';
+  if(scanAdminBtn) scanAdminBtn.style.display  = isAdmin ? '' : 'none';
+  if(scanUserInfo) scanUserInfo.style.display  = isAdmin ? 'none' : '';
+
   // 根據權限顯示/隱藏導覽按鈕
   applyNavPermissions(u);
 

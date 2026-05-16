@@ -93,6 +93,11 @@ async function loadStockList(){
     saveLocal('stock_list_cache', { names:names, sectors:sectors });
     saveLocal('stock_list_date', today);
     updateStockCount();
+
+    // ✅ 清單載入完成後，刷新儀表板顯示（用真實股票代號）
+    if(typeof renderDashTable === 'function') renderDashTable();
+    if(typeof renderFullTable === 'function') renderFullTable();
+
     console.log('股票清單載入完成：'+TOP300.length+'檔');
 
   } catch(e){
