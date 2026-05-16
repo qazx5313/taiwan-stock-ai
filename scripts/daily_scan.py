@@ -335,7 +335,11 @@ def compute_score(code, name, sector, candles, chips):
     elif rsi > 50:                            sig, stype = '等待回測', 'wait'
     else:                                     sig, stype = '觀察中',   'wait'
 
-    sl       = round(ma20 * 0.99, 1) if ma20 > 0 else round(price * 0.95, 1)
+    entry    = round(price * 0.995, 1)
+    sl_ma    = round(ma20 * 0.99, 1) if ma20 > 0 else 0
+    sl_pct   = round(entry * 0.93, 1)   # 入場價 -7% 保底
+    # MA20停損必須低於入場價才採用，否則用 -7% 保底
+    sl       = sl_ma if (sl_ma > 0 and sl_ma < entry) else sl_pct
     risk_lvl = '低' if risk >= 12 else '中' if risk >= 8 else '高'
 
     return {
@@ -354,7 +358,7 @@ def compute_score(code, name, sector, candles, chips):
         'boom_prob':   boom,
         'signal':      sig,
         'signal_type': stype,
-        'entry_price': round(price * 0.995, 1),
+        'entry_price': entry,
         'target1':     round(price * 1.06,  1),
         'target2':     round(price * 1.12,  1),
         'stop_loss':   sl,

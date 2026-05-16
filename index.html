@@ -222,9 +222,9 @@
         <div style="font-size:15px;font-weight:700;" id="rd-title">選擇機器人</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="rd-sub">點擊上方卡片查看詳細</div>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-g" onclick="runAllRobots()">⚡ 全部執行今日操作</button>
-        <button class="btn-g" id="rd-run-btn" onclick="runRobot()">▶ 此機器人今日操作</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);padding:4px 10px;background:rgba(0,255,179,0.06);border:1px solid rgba(0,255,179,0.2);border-radius:4px;" id="robot-auto-status">載入中...</div>
+        <button class="btn-g" onclick="runAllRobots()">⟳ 強制執行今日操作</button>
         <button class="btn" onclick="applyRobotSignals()">套用此策略選股</button>
         <button class="btn-d btn-sm" onclick="resetRobot(selectedRobotIdx)">重置</button>
       </div>

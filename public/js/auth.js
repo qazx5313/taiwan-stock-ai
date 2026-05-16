@@ -149,6 +149,13 @@ function enterApp(){
   watchlist = loadLocal('tw_watchlist', []);
   loadStockList();     // 從 FinMind 載入完整上市上櫃清單
   fetchMarketData();   // 抓 FinMind/TWSE 真實大盤數據（非同步）
+  // 載入 Supabase 快取後自動執行機器人今日操作
+  loadFromSupabase().then(function(loaded){
+    if(loaded){
+      autoRunRobotsIfNeeded();
+      syncRobotStatesFromSupabase(); // 同步機器人狀態（GitHub Actions 執行的結果）
+    }
+  });
   renderDashTable();
   renderFullTable();
   renderRobotCards();

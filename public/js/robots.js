@@ -623,3 +623,160 @@ function resetRobot(idx){
   renderRobotCards();
   toast(ROBOTS[idx].name + ' 已重置');
 }
+
+// ════════════════════════════════════════════
+// 自動執行系統
+// ════════════════════════════════════════════
+
+// 每天只執行一次（記錄上次執行日期）
+function autoRunRobotsIfNeeded(){
+  var today   = new Date().toLocaleDateString('zh-TW');
+  var lastRun = loadLocal('robots_last_auto_run', '');
+
+  // 今天已經跑過，跳過
+  if(lastRun === today){
+    console.log('[機器人] 今日已自動執行過，跳過');
+    updateRobotStatusBar('今日已執行 · ' + today);
+    renderRobotCards();
+    return;
+  }
+
+  // 非交易日（週六日）跳過
+  var dow = new Date().getDay();
+  if(dow === 0 || dow === 6){
+    console.log('[機器人] 今日為假日，跳過');
+    updateRobotStatusBar('假日休市');
+    return;
+  }
+
+  // 盤後才執行（15:00之後）
+  var hour = new Date().getHours();
+  if(hour < 15){
+    console.log('[機器人] 尚未收盤（' + hour + ':xx），跳過自動執行');
+    updateRobotStatusBar('盤中，收盤後自動執行');
+    // 盤中仍渲染現有狀態
+    renderRobotCards();
+    return;
+  }
+
+  // 條件符合：開始自動執行
+  console.log('[機器人] 開始今日自動操作...');
+  autoRunAllRobots();
+}
+
+async function autoRunAllRobots(){
+  var today = new Date().toLocaleDateString('zh-TW');
+  updateRobotStatusBar('⟳ 機器人執行中...');
+
+  var results = [];
+  for(var i = 0; i < ROBOTS.length; i++){
+    var result = await runRobotDaily(ROBOTS[i]);
+    results.push({ name: ROBOTS[i].name, log: result.log || [] });
+    await sleep(300);
+  }
+
+  // 記錄今日已執行
+  saveLocal('robots_last_auto_run', today);
+
+  // 更新 UI
+  renderRobotCards();
+  updateRobotStatusBar('✅ 今日操作完成 · ' + today);
+
+  // 顯示摘要 toast
+  var actions = results.map(function(r){
+    var ops = r.log.filter(function(l){ return l.startsWith('🟢') || l.startsWith('🔴'); });
+    return ops.length > 0 ? r.name + ':' + ops.length + '筆' : null;
+  }).filter(Boolean);
+
+  if(actions.length > 0){
+    toast('機器人今日操作：' + actions.join('、'));
+  } else {
+    toast('機器人今日無操作（無符合條件標的）');
+  }
+}
+
+// 狀態列顯示
+function updateRobotStatusBar(msg){
+  var el = document.getElementById('robot-auto-status');
+  if(el) el.textContent = msg;
+}
+
+// 手動觸發所有機器人（管理員用）
+async function runAllRobots(){
+  // 清除今日執行記錄，強制重跑
+  localStorage.removeItem('robots_last_auto_run');
+  await autoRunAllRobots();
+}
+
+// ════════════════════════════════════════════
+// 從 Supabase 同步機器人狀態（盤後 GitHub Actions 執行後）
+// ════════════════════════════════════════════
+async function syncRobotStatesFromSupabase(){
+  var sbUrl = getSBUrl(); var sbKey = getSBKey();
+  if(!sbUrl || !sbKey) return;
+  try{
+    // 取所有機器人狀態
+    var r = await fetch(sbUrl + '/rest/v1/robot_states?select=*', {
+      headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}
+    });
+    if(!r.ok) return;
+    var states = await r.json();
+
+    // 取近期交易紀錄
+    var r2 = await fetch(sbUrl + '/rest/v1/robot_trades?select=*&order=trade_date.desc&limit=100', {
+      headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}
+    });
+    var trades = r2.ok ? await r2.json() : [];
+
+    // 將 Supabase 狀態合併到 localStorage
+    states.forEach(function(s){
+      var local  = getRobotState(s.robot_id);
+      var sbHold = [];
+      try{ sbHold = JSON.parse(s.holdings_json || '[]'); }catch(e){}
+
+      // 用 Supabase 的資料更新本地
+      var merged = Object.assign(local, {
+        capital:      parseFloat(s.capital) || local.capital,
+        holdings:     sbHold.length > 0 ? sbHold : local.holdings,
+        total_pnl:    parseFloat(s.total_pnl) || local.total_pnl,
+        total_trades: parseInt(s.total_trades) || local.total_trades,
+        wins:         parseInt(s.wins) || local.wins,
+        tradeLog:     trades
+          .filter(function(t){ return t.robot_id === s.robot_id; })
+          .map(function(t){
+            return {
+              date:     t.trade_date,
+              code:     t.symbol,
+              name:     t.name,
+              action:   t.action,
+              price:    t.price,
+              buyPrice: t.buy_price,
+              shares:   t.shares || 1,
+              pnl:      t.pnl,
+              pnlPct:   t.pnl_pct,
+              reason:   t.reason,
+              holdDays: t.hold_days,
+              result:   t.result || '持有中',
+            };
+          }),
+      });
+      merged.winRate = merged.total_trades > 0
+        ? parseFloat((merged.wins / merged.total_trades * 100).toFixed(1)) : 0;
+      saveRobotState(s.robot_id, merged);
+    });
+
+    // 同步最新統計到 ROBOTS 陣列
+    ROBOTS.forEach(function(r){
+      var state = getRobotState(r.id);
+      r.winRate     = state.winRate || r.winRate;
+      r.totalReturn = parseFloat(((state.total_pnl / ROBOT_CAPITAL) * 100).toFixed(1));
+      r.trades      = state.total_trades || r.trades;
+    });
+
+    renderRobotCards();
+    updateRobotStatusBar('✅ 已從 Supabase 同步機器人狀態');
+    console.log('[機器人] Supabase 狀態同步完成');
+  } catch(e){
+    console.warn('[機器人] Supabase 同步失敗:', e.message);
+  }
+}

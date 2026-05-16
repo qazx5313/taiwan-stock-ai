@@ -179,10 +179,13 @@ function computeScore(code, name, candles){
   var boom = Math.min(100, Math.round(ai*0.85 + Math.random()*10));
   var classified = classifySignal(tech, chip, vol_score, risk_score, rsi, kd, macd, price, ma20, hadLimitUp, volRatio);
 
-  var entry = parseFloat((price*0.995).toFixed(1));
-  var t1    = parseFloat((price*1.06).toFixed(1));
-  var t2    = parseFloat((price*1.12).toFixed(1));
-  var sl    = parseFloat((ma20*0.99).toFixed(1));
+  var entry = parseFloat((price * 0.995).toFixed(1));
+  var t1    = parseFloat((price * 1.06).toFixed(1));
+  var t2    = parseFloat((price * 1.12).toFixed(1));
+  // 停損取 MA20×0.99 與 入場價×0.93 兩者較低值，確保停損一定在入場價以下
+  var sl_ma  = ma20 > 0 ? parseFloat((ma20 * 0.99).toFixed(1)) : 0;
+  var sl_pct = parseFloat((entry * 0.93).toFixed(1));  // 入場價 -7% 保底
+  var sl     = sl_ma > 0 && sl_ma < entry ? sl_ma : sl_pct;  // MA20停損必須低於入場價才採用
   var riskLvl = risk_score>=12 ? '低' : risk_score>=8 ? '中' : '高';
 
   return {
