@@ -511,62 +511,65 @@ async function fetchNews(){
   if(newsRunning){ toast('公告載入中...'); return; }
   newsRunning = true;
 
-  var days   = parseInt((document.getElementById('news-days')||{}).value || '3');
-  var today  = new Date();
-  var past   = new Date(); past.setDate(past.getDate() - days);
-  var fmt    = function(d){ return d.toISOString().split('T')[0]; };
+  var days  = parseInt((document.getElementById('news-days')||{}).value || '3');
+  var past  = new Date(); past.setDate(past.getDate() - days);
+  var fmt   = function(d){ return d.toISOString().split('T')[0]; };
+  var pastStr = fmt(past);
 
-  // 更新時間
   var updEl = document.getElementById('news-update-time');
   if(updEl) updEl.textContent = '載入中...';
-
   var container = document.getElementById('news-container');
-  if(container) container.innerHTML = '<div style="text-align:center;padding:30px;font-family:var(--mono);font-size:10px;color:var(--accent2);">⟳ 從 FinMind 載入重大公告...</div>';
+  if(container) container.innerHTML = '<div style="text-align:center;padding:30px;font-family:var(--mono);font-size:10px;color:var(--accent2);">⟳ 從 Supabase 讀取 MOPS 公告...</div>';
+
+  var sbUrl = getSBUrl(); var sbKey = getSBKey();
+
+  if(!sbUrl || !sbKey){
+    if(container) container.innerHTML = '<div class="empty">請先在後台設定 Supabase URL 和 Key</div>';
+    newsRunning = false; return;
+  }
 
   try{
-    var data = await fmFetch({
-      dataset:    'TaiwanStockNews',
-      start_date: fmt(past),
-      end_date:   fmt(today),
-    }, 20000);
+    var r = await fetch(sbUrl + '/rest/v1/stock_news?select=*&date=gte.' + pastStr + '&order=date.desc,time.desc&limit=200', {
+      headers:{ 'apikey':sbKey, 'Authorization':'Bearer '+sbKey }
+    });
 
-    if(!data || data.length===0){
-      if(container) container.innerHTML = '<div class="empty">無公告資料（請確認 FinMind Token 已設定）</div>';
+    if(!r.ok) throw new Error('Supabase HTTP ' + r.status);
+    var data = await r.json();
+
+    if(!data || data.length === 0){
+      if(container) container.innerHTML = '<div class="empty" style="padding:30px;">Supabase 無公告資料<br><small style="color:var(--text3);">請先執行 GitHub Actions → 手動觸發 mops 批次</small></div>';
       newsRunning = false; return;
     }
 
-    // 轉換格式 + AI 分析（關鍵字判斷）
+    // 轉換格式
     newsCache = data.map(function(d, i){
-      var judged = aiJudgeNews(d.title || d.news_title || '', d.description || '');
       return {
         id:        i,
-        code:      d.stock_id || '—',
-        name:      getStockName(d.stock_id) || d.stock_id || '—',
-        date:      (d.date||'').split(' ')[0] || '—',
-        time:      (d.date||'').split(' ')[1] || '—',
-        title:     d.title || d.news_title || '—',
-        desc:      d.description || '',
-        link:      d.link || '',
-        judge:     judged.label,
-        judgeType: judged.type,
-        impact:    judged.impact,
-        reason:    judged.reason,
-        cat:       judged.cat,
+        code:      d.stock_id   || '—',
+        name:      d.stock_name || getStockName(d.stock_id) || d.stock_id || '—',
+        date:      d.date       || '—',
+        time:      d.time       || '—',
+        title:     d.title      || '—',
+        desc:      d.description|| '',
+        link:      d.link       || '',
+        judge:     d.judge_label|| '中性',
+        judgeType: d.judge_type || 'neutral',
+        impact:    d.impact     || '低',
+        reason:    d.reason     || '',
+        cat:       d.category   || '重大事件',
+        source:    d.source     || 'MOPS',
       };
-    }).sort(function(a,b){ return (b.date+b.time).localeCompare(a.date+a.time); });
+    });
 
-    // 更新統計
     updateNewsStats();
     if(updEl) updEl.textContent = new Date().toLocaleTimeString('zh-TW');
     renderNewsPage();
-
-    // 同步更新儀表板
     renderDashNews();
-    toast('已載入 '+newsCache.length+' 則公告');
+    toast('已載入 ' + newsCache.length + ' 則 MOPS 公告');
 
   } catch(e){
-    console.warn('News fetch error:', e.message);
-    if(container) container.innerHTML = '<div class="empty">載入失敗：'+escHtml(e.message)+'<br><small>請確認 FinMind Token 已設定且有效</small></div>';
+    console.warn('fetchNews error:', e.message);
+    if(container) container.innerHTML = '<div class="empty">讀取失敗：'+escHtml(e.message)+'</div>';
   }
   newsRunning = false;
 }

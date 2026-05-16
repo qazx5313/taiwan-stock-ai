@@ -86,3 +86,33 @@ CREATE TABLE IF NOT EXISTS scan_progress (
 ALTER TABLE scan_progress ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "anon all scan_progress" ON scan_progress;
 CREATE POLICY "anon all scan_progress" ON scan_progress FOR ALL USING (true);
+
+-- ============================================================
+-- MOPS 重大公告表
+-- ============================================================
+CREATE TABLE IF NOT EXISTS stock_news (
+  id          BIGSERIAL PRIMARY KEY,
+  stock_id    TEXT NOT NULL,
+  stock_name  TEXT,
+  date        DATE NOT NULL,
+  time        TEXT,
+  title       TEXT NOT NULL,
+  description TEXT,
+  link        TEXT,
+  source      TEXT DEFAULT 'MOPS-sii',
+  judge_type  TEXT DEFAULT 'neutral',  -- bull/bear/neutral/watch/risk
+  judge_label TEXT,
+  impact      TEXT DEFAULT '低',       -- 高/中高/中/低
+  category    TEXT DEFAULT '重大事件', -- 重大事件/澄清回應/財務數據/公司治理/法說會
+  reason      TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(stock_id, date, title)
+);
+
+ALTER TABLE stock_news ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all stock_news" ON stock_news;
+CREATE POLICY "anon all stock_news" ON stock_news FOR ALL USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_stock_news_date ON stock_news(date DESC);
+CREATE INDEX IF NOT EXISTS idx_stock_news_judge ON stock_news(judge_type);
+CREATE INDEX IF NOT EXISTS idx_stock_news_stock ON stock_news(stock_id);

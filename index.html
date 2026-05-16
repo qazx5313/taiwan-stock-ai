@@ -422,6 +422,71 @@
       </div>
     </div>
   </div>
+
+  <!-- 四重篩選策略 -->
+  <div class="panel" style="margin-top:13px;" id="four-filter-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div>
+        <div class="pt" style="margin-bottom:4px;">🔍 四重篩選策略 <span style="font-family:var(--mono);font-size:9px;color:var(--text3);">（全部條件通過才選入）</span></div>
+        <div style="font-size:11px;color:var(--text3);">VIX 恐慌 + 月KD低檔 + 低PBR + 高殖利率，同時符合才是絕佳佈局時機</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="tog on" id="four-filter-tog" onclick="toggleFourFilter(this)"><div class="tog-thumb"></div></div>
+        <span style="font-size:10px;color:var(--text2);" id="four-filter-label">已啟用</span>
+        <button class="btn" onclick="runFourFilter()">▶ 執行四重篩選</button>
+      </div>
+    </div>
+
+    <!-- 四個條件設定 -->
+    <div class="g4" style="margin-bottom:14px;">
+      <div style="background:var(--bg2);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:12px;">
+        <div style="font-family:var(--mono);font-size:9px;color:#6366f1;letter-spacing:1px;margin-bottom:8px;">條件 1 · VIX 恐慌指數</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">台指 VIX ≥</div>
+        <input id="filter-vix" type="number" value="40" min="10" max="80" class="full-input" style="margin-bottom:6px;">
+        <div style="font-size:10px;color:var(--text3);">市場恐慌時出現逆勢機會</div>
+        <div id="st-vix" style="margin-top:6px;"><span class="badge b-wait">等待FinMind資料</span></div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:12px;">
+        <div style="font-family:var(--mono);font-size:9px;color:#8b5cf6;letter-spacing:1px;margin-bottom:8px;">條件 2 · 月K 低檔</div>
+        <div style="display:flex;gap:5px;align-items:center;margin-bottom:6px;">
+          <span style="font-size:11px;color:var(--text2);">月K &lt;</span>
+          <input id="filter-kd" type="number" value="30" min="10" max="50" class="full-input" style="width:60px;">
+          <span style="font-size:11px;color:var(--text2);">月D &lt;</span>
+          <input id="filter-kd2" type="number" value="30" min="10" max="50" class="full-input" style="width:60px;">
+        </div>
+        <div style="font-size:10px;color:var(--text3);">月線動能在低檔區，底部信號</div>
+        <div id="st-kd" style="margin-top:6px;"><span class="badge b-wait">等待資料</span></div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:12px;">
+        <div style="font-family:var(--mono);font-size:9px;color:#06b6d4;letter-spacing:1px;margin-bottom:8px;">條件 3 · 股價淨值比</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">PBR &lt;</div>
+        <input id="filter-pbr" type="number" value="1.2" min="0.5" max="5" step="0.1" class="full-input" style="margin-bottom:6px;">
+        <div style="font-size:10px;color:var(--text3);">股價低於或接近淨值，相對便宜</div>
+        <div id="st-pbr" style="margin-top:6px;"><span class="badge b-wait">需PBR資料</span></div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;">
+        <div style="font-family:var(--mono);font-size:9px;color:#10b981;letter-spacing:1px;margin-bottom:8px;">條件 4 · 現金殖利率</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">殖利率 ≥ %</div>
+        <input id="filter-yield" type="number" value="8" min="3" max="20" class="full-input" style="margin-bottom:6px;">
+        <div style="font-size:10px;color:var(--text3);">高現金配息，逢低佈局報酬高</div>
+        <div id="st-yield" style="margin-top:6px;"><span class="badge b-wait">需股利資料</span></div>
+      </div>
+    </div>
+
+    <!-- 篩選結果 -->
+    <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:9px;color:var(--text3);font-family:var(--mono);">篩選結果：<span id="four-result-count" style="color:var(--accent2);">0</span> 檔通過全部條件</div>
+      <div style="font-size:10px;color:var(--text3);">⚠️ 此策略需要 FinMind Token 取得 VIX、PBR、殖利率資料</div>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>名稱</th><th>代號</th><th>現價</th><th>VIX</th><th>月KD</th><th>PBR</th><th>殖利率</th><th>AI分</th><th>建議</th></tr></thead>
+        <tbody id="four-filter-tbody">
+          <tr><td colspan="9" class="empty">點「執行四重篩選」開始分析（需設定 FinMind Token）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- ────────── NEWS MONITOR ────────── -->
@@ -455,52 +520,6 @@
     <div class="vts"><div class="vts-lbl">利多公告</div><div class="vts-val up" id="stat-bull">—</div></div>
     <div class="vts"><div class="vts-lbl">利空公告</div><div class="vts-val dn" id="stat-bear">—</div></div>
     <div class="vts"><div class="vts-lbl">高影響公告</div><div class="vts-val" style="color:var(--gold);" id="stat-high">—</div></div>
-  </div>
-
-  <!-- 四重篩選條件 -->
-  <div class="panel" style="margin-bottom:13px;" id="news-filter-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div class="pt" style="margin-bottom:0;">四重篩選條件 <span style="font-family:var(--mono);font-size:9px;color:var(--text3);">（全部通過才選入）</span></div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <div class="tog on" id="four-filter-tog" onclick="toggleFourFilter(this)"><div class="tog-thumb"></div></div>
-        <span style="font-size:10px;color:var(--text2);" id="four-filter-label">已啟用</span>
-      </div>
-    </div>
-    <div class="tw">
-      <table>
-        <thead><tr><th>#</th><th>條件</th><th>門檻設定</th><th>說明</th><th>目前狀態</th></tr></thead>
-        <tbody>
-          <tr>
-            <td style="font-family:var(--mono);color:var(--accent);">1</td>
-            <td>台指 VIX 恐慌指數</td>
-            <td><input id="filter-vix" type="number" value="40" min="10" max="80" style="width:70px;" class="full-input" onchange="updateFilterStatus()"> ≥</td>
-            <td style="font-size:10px;color:var(--text3);">市場處於恐慌狀態，逆勢機會出現</td>
-            <td id="st-vix"><span class="badge b-wait">等待資料</span></td>
-          </tr>
-          <tr>
-            <td style="font-family:var(--mono);color:var(--accent);">2</td>
-            <td>月K 低檔條件</td>
-            <td>月K &lt; <input id="filter-kd" type="number" value="30" min="10" max="50" style="width:55px;" class="full-input"> 且月D &lt; <input id="filter-kd2" type="number" value="30" min="10" max="50" style="width:55px;" class="full-input"></td>
-            <td style="font-size:10px;color:var(--text3);">月線動能在低檔區</td>
-            <td id="st-kd"><span class="badge b-wait">等待資料</span></td>
-          </tr>
-          <tr>
-            <td style="font-family:var(--mono);color:var(--accent);">3</td>
-            <td>股價淨值比</td>
-            <td>PBR &lt; <input id="filter-pbr" type="number" value="1.2" min="0.5" max="3" step="0.1" style="width:65px;" class="full-input"></td>
-            <td style="font-size:10px;color:var(--text3);">股價接近或低於淨值（便宜）</td>
-            <td id="st-pbr"><span class="badge b-wait">等待資料</span></td>
-          </tr>
-          <tr>
-            <td style="font-family:var(--mono);color:var(--accent);">4</td>
-            <td>現金殖利率</td>
-            <td>≥ <input id="filter-yield" type="number" value="8" min="3" max="20" style="width:60px;" class="full-input"> %</td>
-            <td style="font-size:10px;color:var(--text3);">高現金配息回報</td>
-            <td id="st-yield"><span class="badge b-wait">等待資料</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 
   <!-- 公告列表 -->

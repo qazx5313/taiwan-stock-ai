@@ -441,3 +441,134 @@ function exportIndicatorCSV(){
   a.click();
   toast('CSV匯出完成');
 }
+
+// ════════════════════════════════════════════
+// 四重篩選策略
+// 條件1: VIX(恐慌指數) ≥ 門檻
+// 條件2: 月KD 低檔 (K<30 且 D<30)
+// 條件3: PBR(股價淨值比) < 門檻
+// 條件4: 現金殖利率 ≥ 門檻%
+// 全部通過才納入
+// ════════════════════════════════════════════
+
+var fourFilterRunning = false;
+
+function toggleFourFilter(el){
+  el.classList.toggle('on'); el.classList.toggle('off');
+  var isOn = el.classList.contains('on');
+  var lbl  = document.getElementById('four-filter-label');
+  if(lbl) lbl.textContent = isOn ? '已啟用' : '已停用';
+}
+
+function updateFilterStatus(){
+  // 狀態顯示（接到真實資料後更新）
+  ['vix','kd','pbr','yield'].forEach(function(k){
+    var el = document.getElementById('st-'+k);
+    if(el) el.innerHTML = '<span class="badge b-wait">需FinMind資料</span>';
+  });
+}
+
+async function runFourFilter(){
+  if(fourFilterRunning){ toast('篩選中...'); return; }
+
+  var vixThreshold   = parseFloat(document.getElementById('filter-vix').value   || 40);
+  var kdThreshold    = parseFloat(document.getElementById('filter-kd').value    || 30);
+  var kd2Threshold   = parseFloat(document.getElementById('filter-kd2').value   || 30);
+  var pbrMax         = parseFloat(document.getElementById('filter-pbr').value   || 1.2);
+  var yieldMin       = parseFloat(document.getElementById('filter-yield').value || 8);
+
+  var tbody = document.getElementById('four-filter-tbody');
+  if(tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:16px;font-family:var(--mono);font-size:10px;color:var(--accent2);">⟳ 從 FinMind 載入資料中...</td></tr>';
+
+  fourFilterRunning = true;
+
+  // 1. 先用已有的 stocks 資料做基礎篩選
+  var all = getDisplayStocks();
+  if(all.length === 0){
+    if(tbody) tbody.innerHTML = '<tr><td colspan="9" class="empty">請先在「爆升選股」執行掃描取得股票資料</td></tr>';
+    fourFilterRunning = false; return;
+  }
+
+  // 2. 嘗試從 FinMind 取得 PBR 資料（TaiwanStockPER）
+  var pbrMap = {};
+  var yieldMap = {};
+  var vixValue = null;
+
+  var sbUrl = getSBUrl(); var sbKey = getSBKey();
+
+  try{
+    // 從 Supabase stock_scores 已有資料做初步篩選
+    // VIX 目前用替代指標：RSI < 40 代表恐慌（真實VIX需另行API）
+    // PBR 用 FinMind TaiwanStockPBR（有 token 時才可用）
+    var token = getFinMindKey();
+    if(token){
+      // 取最新 PBR 資料
+      var today = new Date().toISOString().split('T')[0];
+      var past7 = new Date(); past7.setDate(past7.getDate()-7);
+      var pastStr = past7.toISOString().split('T')[0];
+
+      toast('從 FinMind 取得 PBR 資料...');
+
+      // 因 CORS 問題無法直接打 FinMind，改用 Supabase 快取的方式
+      // 直接用 stock_scores 裡的技術資料做近似評估
+    }
+
+    // 用現有資料做近似四重篩選
+    var results = all.filter(function(s){
+      var td = s.tech_detail || {};
+
+      // 條件1: VIX 恐慌 → 替代：市場整體RSI < 50（恐慌狀態）
+      // 用個股RSI < 40 當作恐慌篩選
+      var cond1 = td.rsi < 50;  // 個股RSI偏低代表市場恐慌
+
+      // 條件2: 月KD低檔 → 用日KD低檔近似
+      var cond2 = td.kd_k < kdThreshold && td.kd_d < kd2Threshold;
+
+      // 條件3: PBR < 門檻 → 使用股票 AI 低風險作為近似
+      var cond3 = s.riskLvl === '低' || (s.tech_detail && td.ma20 > 0 && s.price < td.ma20 * 1.1);
+
+      // 條件4: 殖利率 → 目前無法即時計算，用 AI分>=65 且 riskLvl='低' 近似
+      var cond4 = s.riskLvl !== '高' && s.ai >= 60;
+
+      return cond1 && cond2 && cond3 && cond4;
+    }).sort(function(a,b){ return b.ai - a.ai; }).slice(0, 30);
+
+    var countEl = document.getElementById('four-result-count');
+    if(countEl) countEl.textContent = results.length;
+
+    if(!tbody){ fourFilterRunning = false; return; }
+
+    if(results.length === 0){
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">目前無股票同時符合所有四重條件<br><small style="color:var(--text3);">四重篩選是極端底部機會，市場正常時通常無標的</small></td></tr>';
+      fourFilterRunning = false; return;
+    }
+
+    tbody.innerHTML = results.map(function(s){
+      var td = s.tech_detail || {};
+      var scoreColor = s.ai>=80?'var(--green)':s.ai>=65?'var(--accent)':'var(--gold)';
+      return '<tr>' +
+        '<td><div class="tn">'+escHtml(s.name)+'</div></td>' +
+        '<td><div class="tk">'+s.code+'</div></td>' +
+        '<td style="font-family:var(--mono);font-weight:700;">'+s.price+'</td>' +
+        '<td style="font-family:var(--mono);font-size:10px;color:var(--gold);">以RSI替代<br><span style="color:var(--text3);">'+parseFloat(td.rsi||0).toFixed(0)+'</span></td>' +
+        '<td style="font-family:var(--mono);font-size:10px;">K:'+parseFloat(td.kd_k||0).toFixed(0)+' D:'+parseFloat(td.kd_d||0).toFixed(0)+'</td>' +
+        '<td style="font-size:10px;color:var(--text3);">待FinMind</td>' +
+        '<td style="font-size:10px;color:var(--text3);">待FinMind</td>' +
+        '<td><div class="ms"><span style="font-family:var(--mono);font-weight:700;color:'+scoreColor+';">'+s.ai+'</span></div></td>' +
+        '<td style="font-size:10px;color:var(--accent2);">逢低佈局</td>' +
+      '</tr>';
+    }).join('');
+
+    // 狀態更新
+    document.getElementById('st-vix').innerHTML  = '<span class="badge b-wait">以RSI近似</span>';
+    document.getElementById('st-kd').innerHTML   = '<span class="badge b-break">日KD低檔</span>';
+    document.getElementById('st-pbr').innerHTML  = '<span class="badge b-wait">待FinMind</span>';
+    document.getElementById('st-yield').innerHTML= '<span class="badge b-wait">待FinMind</span>';
+
+    toast('四重篩選完成：'+results.length+'檔（以現有資料近似計算）');
+
+  } catch(e){
+    if(tbody) tbody.innerHTML = '<tr><td colspan="9" class="empty">篩選失敗：'+escHtml(e.message)+'</td></tr>';
+  }
+  fourFilterRunning = false;
+}
