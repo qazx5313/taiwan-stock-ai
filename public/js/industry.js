@@ -48,7 +48,88 @@ var MOCK_NODES = {
     {id:'n-aiot',     layer:4, label:'Edge AI / AIoT',    color:'#10b981', x:740, y:420},
     {id:'n-sat',      layer:4, label:'低軌衛星',          color:'#10b981', x:740, y:510},
     {id:'n-defense',  layer:4, label:'軍工產業',          color:'#10b981', x:740, y:600},
-  ]
+  ],
+
+  // ─── 消費與終端 ───
+  'consumer': [
+    // Layer 1: 消費電子 IC
+    {id:'c-disp',   layer:1, label:'顯示驅動 IC',       color:'#f59e0b', x:80, y:80 },
+    {id:'c-analog',  layer:1, label:'類比與功率管理 IC', color:'#f59e0b', x:80, y:200},
+    {id:'c-auto',    layer:1, label:'車用電子 IC',       color:'#f59e0b', x:80, y:320},
+    // Layer 2: 主流終端
+    {id:'c-pkg',     layer:2, label:'主流封裝與測試',    color:'#ef4444', x:300, y:60 },
+    {id:'c-dist',    layer:2, label:'IC 通路',           color:'#ef4444', x:300, y:180},
+    {id:'c-mem',     layer:2, label:'記憶體模組',        color:'#ef4444', x:300, y:300},
+    // Layer 3: 關鍵元件
+    {id:'c-glass',   layer:3, label:'玻纖布',            color:'#06b6d4', x:520, y:20 },
+    {id:'c-resist',  layer:3, label:'電阻與晶振',        color:'#06b6d4', x:520, y:100},
+    {id:'c-conn',    layer:3, label:'連接器',            color:'#06b6d4', x:520, y:180},
+    {id:'c-fpc',     layer:3, label:'軟板 FPC',          color:'#06b6d4', x:520, y:260},
+    {id:'c-sensor',  layer:3, label:'光感測元件',        color:'#06b6d4', x:520, y:340},
+    {id:'c-lens',    layer:3, label:'光學鏡頭',          color:'#06b6d4', x:520, y:420},
+    {id:'c-panel',   layer:3, label:'面板產業',          color:'#06b6d4', x:520, y:500},
+    {id:'c-mech',    layer:3, label:'精密機構',          color:'#06b6d4', x:520, y:580},
+    {id:'c-pcb',     layer:3, label:'PCB 製造',          color:'#06b6d4', x:520, y:660},
+    // Layer 4: 終端裝置
+    {id:'c-pcnb',    layer:4, label:'PC / NB',           color:'#10b981', x:740, y:80 },
+    {id:'c-phone',   layer:4, label:'手機與消費電子',    color:'#10b981', x:740, y:180},
+    {id:'c-robot',   layer:4, label:'實體 AI 機器人',    color:'#10b981', x:740, y:280},
+    {id:'c-xr',      layer:4, label:'AR/VR/XR 光學',    color:'#10b981', x:740, y:380},
+    {id:'c-auto2',   layer:4, label:'工業自動化',        color:'#10b981', x:740, y:480},
+  ],
+
+  // ─── 晶圓製造上游 ───
+  'wafer': [
+    // Layer 1: 設備・材料・廠務
+    {id:'w-equip',   layer:1, label:'晶圓廠設備',        color:'#8b5cf6', x:80, y:80 },
+    {id:'w-mat',     layer:1, label:'半導體材料',        color:'#8b5cf6', x:80, y:220},
+    {id:'w-epc',     layer:1, label:'設備工程 EPC',      color:'#8b5cf6', x:80, y:360},
+    // Layer 2: 晶圓製造
+    {id:'w-foundry', layer:2, label:'晶圓代工',          color:'#06b6d4', x:300, y:100},
+    {id:'w-3rd',     layer:2, label:'第三代半導體',      color:'#06b6d4', x:300, y:280},
+    // Layer 3: 封裝與測試
+    {id:'w-cowos',   layer:3, label:'CoWoS 先進封裝',   color:'#6366f1', x:520, y:40 },
+    {id:'w-test',    layer:3, label:'高階測試介面',      color:'#6366f1', x:520, y:160},
+    {id:'w-hbm',     layer:3, label:'HBM 供應鏈',       color:'#6366f1', x:520, y:280},
+    {id:'w-pkg',     layer:3, label:'主流封裝與測試',    color:'#6366f1', x:520, y:400},
+    // Layer 4: 通路・模組
+    {id:'w-dist',    layer:4, label:'IC 通路',           color:'#10b981', x:740, y:120},
+    {id:'w-mem',     layer:4, label:'記憶體模組',        color:'#10b981', x:740, y:280},
+  ],
+
+  // ─── 綠色能源 ───
+  'green': [
+    // Layer 1: 上游原料
+    {id:'g-mat',     layer:1, label:'電池關鍵材料',      color:'#10b981', x:80, y:200},
+    // Layer 2: 製造
+    {id:'g-cell',    layer:2, label:'電芯與模組',        color:'#22c55e', x:300, y:100},
+    {id:'g-solar',   layer:2, label:'太陽能產業',        color:'#22c55e', x:300, y:280},
+    // Layer 3: 系統整合
+    {id:'g-batt',    layer:3, label:'動力電池與儲能',    color:'#84cc16', x:520, y:80 },
+    {id:'g-ess',     layer:3, label:'儲能系統整合',      color:'#84cc16', x:520, y:280},
+    // Layer 4: 電力基礎建設
+    {id:'g-cable',   layer:4, label:'電器電纜',          color:'#f59e0b', x:740, y:120},
+    {id:'g-wind',    layer:4, label:'離岸風電',          color:'#f59e0b', x:740, y:320},
+  ],
+
+  // ─── 數位與服務 ───
+  'digital': [
+    // Layer 1: 數位服務
+    {id:'d-sw',      layer:1, label:'軟體與客服',        color:'#6366f1', x:80, y:40 },
+    {id:'d-saas',    layer:1, label:'企業 SaaS',         color:'#6366f1', x:80, y:150},
+    {id:'d-cloud',   layer:1, label:'雲端與 MSP',        color:'#6366f1', x:80, y:260},
+    {id:'d-bpo',     layer:1, label:'整合與委外',        color:'#6366f1', x:80, y:370},
+    {id:'d-ec',      layer:1, label:'電商電子',          color:'#6366f1', x:80, y:480},
+    {id:'d-sec',     layer:1, label:'資安防護',          color:'#6366f1', x:80, y:590},
+    // Layer 2: 金融
+    {id:'d-bank',    layer:2, label:'銀行金融',          color:'#06b6d4', x:300, y:300},
+    // Layer 3: 航運物流
+    {id:'d-bulk',    layer:3, label:'散裝航運',          color:'#f59e0b', x:520, y:150},
+    {id:'d-cont',    layer:3, label:'貨櫃航運',          color:'#f59e0b', x:520, y:350},
+    // Layer 4: 其他產業
+    {id:'d-us',      layer:4, label:'美國房市',          color:'#ef4444', x:740, y:150},
+    {id:'d-chem',    layer:4, label:'石化與塑膠',        color:'#ef4444', x:740, y:350},
+  ],
 };
 
 var MOCK_EDGES = {
@@ -71,7 +152,80 @@ var MOCK_EDGES = {
     {from:'n-server',from_layer:4, to:'n-network', type:'related'},
     {from:'n-server',from_layer:4, to:'n-aiot',   type:'related'},
     {from:'n-optical',from_layer:4, to:'n-sat',   type:'related'},
-  ]
+  ],
+
+  // ─── 消費與終端 ───
+  'consumer': [
+    {from:'c-disp',  to:'c-panel', type:'supply'},
+    {from:'c-disp',  to:'c-pcnb',  type:'supply'},
+    {from:'c-disp',  to:'c-phone', type:'supply'},
+    {from:'c-analog', to:'c-pcnb', type:'supply'},
+    {from:'c-analog', to:'c-auto2',type:'supply'},
+    {from:'c-auto',  to:'c-auto2', type:'supply'},
+    {from:'c-pkg',   to:'c-dist',  type:'supply'},
+    {from:'c-mem',   to:'c-pcnb',  type:'supply'},
+    {from:'c-mem',   to:'c-phone', type:'supply'},
+    {from:'c-glass', to:'c-pcb',   type:'supply'},
+    {from:'c-conn',  to:'c-pcnb',  type:'supply'},
+    {from:'c-fpc',   to:'c-phone', type:'supply'},
+    {from:'c-sensor',to:'c-phone', type:'supply'},
+    {from:'c-lens',  to:'c-phone', type:'supply'},
+    {from:'c-lens',  to:'c-xr',    type:'supply'},
+    {from:'c-panel', to:'c-pcnb',  type:'supply'},
+    {from:'c-panel', to:'c-phone', type:'supply'},
+    {from:'c-mech',  to:'c-robot', type:'supply'},
+    {from:'c-pcb',   to:'c-pcnb',  type:'supply'},
+    {from:'c-disp',  to:'c-xr',    type:'tech'},
+    {from:'c-sensor',to:'c-robot', type:'tech'},
+    {from:'c-auto',  to:'c-robot', type:'tech'},
+    {from:'c-pcnb',  to:'c-phone', type:'related'},
+    {from:'c-robot', to:'c-auto2', type:'related'},
+  ],
+
+  // ─── 晶圓製造上游 ───
+  'wafer': [
+    {from:'w-equip', to:'w-foundry',type:'supply'},
+    {from:'w-mat',   to:'w-foundry',type:'supply'},
+    {from:'w-mat',   to:'w-3rd',    type:'supply'},
+    {from:'w-epc',   to:'w-foundry',type:'supply'},
+    {from:'w-foundry',to:'w-cowos', type:'supply'},
+    {from:'w-foundry',to:'w-pkg',   type:'supply'},
+    {from:'w-3rd',   to:'w-cowos',  type:'supply'},
+    {from:'w-cowos', to:'w-hbm',    type:'tech'},
+    {from:'w-test',  to:'w-hbm',    type:'tech'},
+    {from:'w-cowos', to:'w-dist',   type:'supply'},
+    {from:'w-pkg',   to:'w-dist',   type:'supply'},
+    {from:'w-hbm',   to:'w-mem',    type:'supply'},
+    {from:'w-equip', to:'w-3rd',    type:'tech'},
+  ],
+
+  // ─── 綠色能源 ───
+  'green': [
+    {from:'g-mat',   to:'g-cell',  type:'supply'},
+    {from:'g-mat',   to:'g-solar', type:'supply'},
+    {from:'g-cell',  to:'g-batt',  type:'supply'},
+    {from:'g-solar', to:'g-ess',   type:'supply'},
+    {from:'g-batt',  to:'g-ess',   type:'supply'},
+    {from:'g-ess',   to:'g-cable', type:'supply'},
+    {from:'g-ess',   to:'g-wind',  type:'supply'},
+    {from:'g-solar', to:'g-wind',  type:'related'},
+    {from:'g-cell',  to:'g-ess',   type:'tech'},
+  ],
+
+  // ─── 數位與服務 ───
+  'digital': [
+    {from:'d-saas',  to:'d-bank',  type:'supply'},
+    {from:'d-cloud', to:'d-saas',  type:'supply'},
+    {from:'d-cloud', to:'d-bpo',   type:'supply'},
+    {from:'d-sw',    to:'d-saas',  type:'supply'},
+    {from:'d-sec',   to:'d-cloud', type:'supply'},
+    {from:'d-ec',    to:'d-bpo',   type:'related'},
+    {from:'d-bank',  to:'d-ec',    type:'related'},
+    {from:'d-bulk',  to:'d-cont',  type:'related'},
+    {from:'d-bpo',   to:'d-bulk',  type:'related'},
+    {from:'d-us',    to:'d-chem',  type:'related'},
+    {from:'d-cloud', to:'d-sec',   type:'tech'},
+  ],
 };
 
 // 節點對應的股票代號（預定義）
@@ -100,114 +254,345 @@ var NODE_STOCK_CODES = {
   'n-aiot':      ['2454'],
   'n-sat':       ['2345','4966'],
   'n-defense':   ['2317','1590'],
+
+  // 消費與終端
+  'c-disp':    ['3034','3231','2451','3481'],
+  'c-analog':  ['6768','2409','4966'],
+  'c-auto':    ['8046','2388','6452'],
+  'c-pkg':     ['2303','2325','2449'],
+  'c-dist':    ['3356','2348','3014'],
+  'c-mem':     ['2337','4256','3706'],
+  'c-glass':   ['1303','1301','1802'],
+  'c-resist':  ['2327','2492','2443'],
+  'c-conn':    ['3665','3023','6134'],
+  'c-fpc':     ['8101','6116','3231'],
+  'c-sensor':  ['3652','3450','6274'],
+  'c-lens':    ['3008','6244','5483'],
+  'c-panel':   ['2340','3481','2409'],
+  'c-mech':    ['2059','1590','2049'],
+  'c-pcb':     ['8046','2383','2382'],
+  'c-pcnb':    ['2382','2356','3231'],
+  'c-phone':   ['2317','4938','2354'],
+  'c-robot':   ['2049','1590','2059'],
+  'c-xr':      ['3008','6244','2498'],
+  'c-auto2':   ['2049','1590','2059'],
+
+  // 晶圓製造上游
+  'w-equip':   ['3057','6597','3085'],
+  'w-mat':     ['4977','6269','5483'],
+  'w-epc':     ['2404','5299','5014'],
+  'w-foundry': ['2330','2303','5347'],
+  'w-3rd':     ['6488','6523','3234'],
+  'w-cowos':   ['2330','2354','5274'],
+  'w-test':    ['2330','6533','3443'],
+  'w-hbm':     ['4966','2330'],
+  'w-pkg':     ['2303','2325','2449'],
+  'w-dist':    ['3356','2348','3014'],
+  'w-mem':     ['2337','4256'],
+
+  // 綠色能源
+  'g-mat':     ['1810','5009','6285'],
+  'g-cell':    ['3691','5483','1337'],
+  'g-solar':   ['3576','3561','2448'],
+  'g-batt':    ['1326','6585','2308'],
+  'g-ess':     ['6238','1590','2308'],
+  'g-cable':   ['1312','1303','5009'],
+  'g-wind':    ['3038','5299','2208'],
+
+  // 數位與服務
+  'd-sw':      ['2388','6214','3088'],
+  'd-saas':    ['6214','3484','5347'],
+  'd-cloud':   ['2301','3061','3556'],
+  'd-bpo':     ['2388','6214','5347'],
+  'd-ec':      ['8454','2388','3058'],
+  'd-sec':     ['6214','3484','3085'],
+  'd-bank':    ['2881','2882','2886','2884'],
+  'd-bulk':    ['2603','2615','2609'],
+  'd-cont':    ['2603','2609','2615'],
+  'd-us':      ['5876','2882','2881'],
+  'd-chem':    ['1301','1303','1326'],
 };
 
-var LAYER_LABELS = ['AI 晶片設計','先進封裝製程','AI 伺服器元件','AI 終端應用'];
-var LAYER_COLORS = ['#6366f1','#8b5cf6','#06b6d4','#10b981'];
-var currentTheme = 'ai-compute';
-var selectedNode = null;
-var industryWatchlist = loadLocal('industry_watchlist', []);
+// ════════════════════════════════════════════
+// 節點個股詳細資料（含題材熱度）
+// ════════════════════════════════════════════
+var NODE_STOCKS_DATA = {
+  // 消費與終端
+  'c-disp': [
+    {code:'3034',name:'聯詠',  sector:'顯示驅動IC', score:78, heat:88, tech:'多頭', chip:'外資買超', inst:'外資買', tags:['顯示驅動','OLED驅動']},
+    {code:'2451',name:'創見',  sector:'記憶體模組', score:65, heat:62, tech:'整理', chip:'持平',    inst:'中性',  tags:['記憶體','消費電子']},
+    {code:'3481',name:'群創',  sector:'面板',       score:61, heat:58, tech:'整理', chip:'持平',    inst:'中性',  tags:['面板','顯示器']},
+  ],
+  'c-lens': [
+    {code:'3008',name:'大立光',sector:'光學鏡頭',   score:85, heat:82, tech:'強勢', chip:'外資買超', inst:'外資買', tags:['光學鏡頭','手機鏡頭','AR光學']},
+    {code:'6244',name:'茂林-KY',sector:'光學元件',  score:71, heat:68, tech:'多頭', chip:'持平',    inst:'投信買', tags:['光學','XR元件']},
+    {code:'5483',name:'中美晶',sector:'矽晶圓',     score:69, heat:65, tech:'整理', chip:'持平',    inst:'中性',  tags:['矽晶圓','光學材料']},
+  ],
+  'c-robot': [
+    {code:'2049',name:'上銀',  sector:'精密機械',   score:82, heat:91, tech:'強勢突破', chip:'外資大買', inst:'外資買', tags:['機器人','線性滑軌','AI機器人']},
+    {code:'1590',name:'亞德客-KY',sector:'氣動元件',score:79, heat:87, tech:'強勢',    chip:'買超',    inst:'外資買', tags:['氣動','機器人','精密']},
+    {code:'2059',name:'川湖',  sector:'精密零件',   score:76, heat:83, tech:'強勢',    chip:'買超',    inst:'外資買', tags:['滑軌','精密機構','伺服器']},
+  ],
+  // 晶圓製造上游
+  'w-foundry': [
+    {code:'2330',name:'台積電',sector:'晶圓代工',   score:90, heat:95, tech:'強勢突破', chip:'法人全買', inst:'外資買', tags:['晶圓代工','CoWoS','3nm']},
+    {code:'2303',name:'聯電',  sector:'晶圓代工',   score:72, heat:70, tech:'多頭',     chip:'外資買超', inst:'外資買', tags:['晶圓代工','成熟製程']},
+    {code:'5347',name:'世界先進',sector:'晶圓代工', score:68, heat:65, tech:'整理',    chip:'持平',    inst:'中性',  tags:['晶圓代工','功率IC']},
+  ],
+  'w-3rd': [
+    {code:'6488',name:'環球晶',sector:'第三代半導體',score:83, heat:86, tech:'強勢',   chip:'外資買超', inst:'外資買', tags:['碳化矽','SiC','第三代半導體']},
+    {code:'6523',name:'達爾全',sector:'功率半導體', score:71, heat:74, tech:'多頭',    chip:'持平',    inst:'投信買', tags:['GaN','氮化鎵']},
+    {code:'3234',name:'光環新網',sector:'資料中心', score:65, heat:60, tech:'整理',   chip:'持平',    inst:'中性',  tags:['碳化矽材料']},
+  ],
+  // 綠色能源
+  'g-batt': [
+    {code:'1326',name:'台化',  sector:'石化',       score:67, heat:72, tech:'整理',    chip:'持平',    inst:'中性',  tags:['電池材料','儲能']},
+    {code:'6585',name:'貝斯達',sector:'電池模組',   score:74, heat:79, tech:'多頭',    chip:'買超',    inst:'投信買', tags:['儲能電池','ESS']},
+    {code:'2308',name:'台達電',sector:'電源',       score:80, heat:85, tech:'強勢',    chip:'外資買超', inst:'外資買', tags:['UPS','儲能系統','逆變器']},
+  ],
+  'g-wind': [
+    {code:'3038',name:'全台',  sector:'離岸風電',   score:63, heat:78, tech:'整理',    chip:'持平',    inst:'中性',  tags:['離岸風電','水下基礎']},
+    {code:'5299',name:'杰力',  sector:'風電元件',   score:61, heat:74, tech:'觀察',    chip:'持平',    inst:'中性',  tags:['風電','電力設備']},
+    {code:'2208',name:'台船',  sector:'造船',       score:58, heat:68, tech:'觀察',    chip:'持平',    inst:'中性',  tags:['離岸風電','浮台']},
+  ],
+  'g-solar': [
+    {code:'3576',name:'聯合再生',sector:'太陽能',   score:59, heat:64, tech:'整理',    chip:'持平',    inst:'中性',  tags:['太陽能電池','模組']},
+    {code:'3561',name:'昱晶',  sector:'太陽能',     score:56, heat:61, tech:'觀察',    chip:'持平',    inst:'中性',  tags:['太陽能','多晶矽']},
+  ],
+  // 數位與服務
+  'd-bank': [
+    {code:'2881',name:'富邦金',sector:'金控',       score:74, heat:68, tech:'多頭',    chip:'外資買超', inst:'外資買', tags:['金控','銀行','保險']},
+    {code:'2882',name:'國泰金',sector:'金控',       score:72, heat:65, tech:'多頭',    chip:'持平',    inst:'中性',  tags:['金控','壽險']},
+    {code:'2886',name:'兆豐金',sector:'金控',       score:68, heat:62, tech:'整理',    chip:'持平',    inst:'中性',  tags:['金控','銀行','外匯']},
+    {code:'2884',name:'玉山金',sector:'金控',       score:69, heat:64, tech:'整理',    chip:'持平',    inst:'中性',  tags:['金控','數位銀行']},
+  ],
+  'd-cont': [
+    {code:'2603',name:'長榮',  sector:'貨櫃航運',   score:77, heat:72, tech:'多頭',    chip:'外資買超', inst:'外資買', tags:['貨櫃航運','全球貿易']},
+    {code:'2609',name:'陽明',  sector:'貨櫃航運',   score:71, heat:68, tech:'多頭',    chip:'持平',    inst:'中性',  tags:['貨櫃航運']},
+    {code:'2615',name:'萬海',  sector:'貨櫃航運',   score:68, heat:65, tech:'整理',    chip:'持平',    inst:'中性',  tags:['貨櫃航運','亞洲航線']},
+  ],
+  'd-bulk': [
+    {code:'2603',name:'長榮',  sector:'航運',       score:77, heat:72, tech:'多頭',    chip:'外資買超', inst:'外資買', tags:['散裝','鐵礦砂']},
+    {code:'2615',name:'萬海',  sector:'散裝航運',   score:68, heat:65, tech:'整理',    chip:'持平',    inst:'中性',  tags:['散裝航運']},
+  ],
+  'd-cloud': [
+    {code:'2301',name:'光寶科',sector:'雲端',       score:76, heat:74, tech:'多頭',    chip:'買超',    inst:'投信買', tags:['雲端服務','機房']},
+    {code:'3061',name:'威健',  sector:'IT服務',     score:62, heat:60, tech:'整理',    chip:'持平',    inst:'中性',  tags:['IT服務','MSP']},
+  ],
+  'd-sec': [
+    {code:'6214',name:'精誠',  sector:'資安',       score:70, heat:78, tech:'多頭',    chip:'買超',    inst:'投信買', tags:['資安','SOC','雲端資安']},
+    {code:'3484',name:'崧騰',  sector:'資安',       score:65, heat:72, tech:'整理',    chip:'持平',    inst:'中性',  tags:['資安','IoT安全']},
+  ],
+};
+
+// 題材熱度計算（各主題）
+var THEME_HEAT = {
+  'ai-compute': 95,
+  'consumer':   72,
+  'wafer':      85,
+  'green':      78,
+  'digital':    68,
+};
+
+// 節點題材熱度
+var NODE_HEAT = {
+  // AI算力
+  'n-asic':88,'n-hpc':92,'n-cxl':85,'n-cowos':90,'n-server':94,
+  'n-aircool':91,'n-liqcool':89,'n-conn':83,'n-psu':79,
+  // 消費與終端
+  'c-robot':91,'c-sensor':82,'c-lens':78,'c-disp':74,'c-phone':70,
+  'c-auto':76,'c-xr':88,'c-auto2':85,'c-mech':83,
+  // 晶圓
+  'w-foundry':90,'w-3rd':86,'w-cowos':88,'w-hbm':85,'w-equip':79,
+  // 綠色
+  'g-batt':82,'g-ess':79,'g-wind':75,'g-solar':62,'g-mat':70,
+  // 數位
+  'd-cont':72,'d-bulk':68,'d-bank':65,'d-sec':78,'d-cloud':74,
+};
+
+// ── 主題設定 ──
+var THEME_CONFIG = {
+  'ai-compute': {
+    layers: ['AI 晶片設計','先進封裝製程','AI 伺服器元件','AI 終端應用'],
+    colors: ['#6366f1','#8b5cf6','#06b6d4','#10b981'],
+  },
+  'consumer': {
+    layers: ['消費電子 IC','主流終端','關鍵元件','終端裝置'],
+    colors: ['#f59e0b','#ef4444','#06b6d4','#10b981'],
+  },
+  'wafer': {
+    layers: ['設備・材料・廠務','晶圓製造','封裝與測試','通路・模組'],
+    colors: ['#8b5cf6','#06b6d4','#6366f1','#10b981'],
+  },
+  'green': {
+    layers: ['上游原料','製造','系統整合','電力基礎建設'],
+    colors: ['#10b981','#22c55e','#84cc16','#f59e0b'],
+  },
+  'digital': {
+    layers: ['數位服務','金融','航運物流','其他產業'],
+    colors: ['#6366f1','#06b6d4','#f59e0b','#ef4444'],
+  },
+};
 
 // ── 切換主題 ──
 function switchTheme(themeId, btn){
   currentTheme = themeId; selectedNode = null;
   document.querySelectorAll('#tab-industry .ft').forEach(function(b){ b.classList.remove('active'); });
   if(btn) btn.classList.add('active');
-  if(themeId !== 'ai-compute'){
-    document.getElementById('node-title').textContent    = '開發中';
-    document.getElementById('node-subtitle').textContent = '此主題即將推出';
-    document.getElementById('node-stocks-list').innerHTML = '<div class="empty" style="padding:40px;">此主題資料建置中...</div>';
-    drawMap([],[]);
-    return;
+
+  // 更新主題熱度顯示
+  var heatEl = document.getElementById('theme-heat-display');
+  if(heatEl){
+    var h = THEME_HEAT[themeId] || 70;
+    var hc = h>=85?'var(--green)':h>=70?'var(--accent2)':'var(--gold)';
+    heatEl.innerHTML = '題材熱度：<span style="color:'+hc+';font-weight:700;">'+h+'</span>';
   }
-  drawMap(MOCK_NODES[themeId]||[], MOCK_EDGES[themeId]||[]);
+
+  // 重置個股面板
+  var titleEl = document.getElementById('node-title');
+  var subEl   = document.getElementById('node-subtitle');
+  var listEl  = document.getElementById('node-stocks-list');
+  if(titleEl) titleEl.textContent = '點選節點';
+  if(subEl)   subEl.textContent   = '查看相關個股';
+  if(listEl)  listEl.innerHTML    = '<div class="empty" style="padding:30px;">← 點擊節點查看個股</div>';
+
+  drawMap(MOCK_NODES[themeId]||[], MOCK_EDGES[themeId]||[], themeId);
 }
 
-// ── 繪製 SVG 地圖 ──
-function drawMap(nodes, edges){
+var currentTheme  = 'ai-compute';
+var selectedNode  = null;
+var industryWatchlist = loadLocal('industry_watchlist', []);
+
+// ── 繪製 SVG 地圖（支援所有主題）──
+function drawMap(nodes, edges, themeId){
+  themeId = themeId || currentTheme;
+  var cfg  = THEME_CONFIG[themeId] || THEME_CONFIG['ai-compute'];
   var svg  = document.getElementById('industry-svg');
   var cont = document.getElementById('industry-map-container');
   if(!svg || !cont) return;
-  var W = cont.clientWidth || 900, H = cont.clientHeight || 580;
+  var W = cont.clientWidth || 900, H = cont.clientHeight || 600;
   svg.setAttribute('viewBox','0 0 '+(W-20)+' '+(H-20));
   svg.innerHTML = '';
   if(!nodes.length){ return; }
 
   var layerW  = (W - 60) / 4;
   var nodePos = {};
+
+  // 按 layer 分組自動排列
   [1,2,3,4].forEach(function(l){
-    var ln = nodes.filter(function(n){ return n.layer===l; });
-    var totalH = H - 80;
-    var step   = ln.length > 1 ? totalH / ln.length : totalH;
-    ln.forEach(function(n,i){
+    var ln     = nodes.filter(function(n){ return n.layer===l; });
+    var usableH= H - 80;
+    var step   = ln.length > 1 ? usableH / ln.length : usableH;
+    ln.forEach(function(n, i){
       nodePos[n.id] = {
         x: 30 + (l-1)*layerW + layerW/2,
-        y: 40 + step*i + (ln.length===1 ? totalH/2 : step*0.3),
+        y: 40 + step*i + (ln.length===1 ? usableH/2 : step*0.25),
       };
     });
   });
 
   // 層分隔線 + 層標題
-  [1,2,3,4].forEach(function(l,i){
-    if(i<3){
+  [1,2,3,4].forEach(function(l, i){
+    if(i < 3){
       var sep = document.createElementNS('http://www.w3.org/2000/svg','line');
       var lx  = 30 + l*layerW;
       sep.setAttribute('x1',lx); sep.setAttribute('y1','10');
       sep.setAttribute('x2',lx); sep.setAttribute('y2',H-10);
-      sep.setAttribute('stroke','rgba(255,255,255,0.04)'); sep.setAttribute('stroke-width','1');
+      sep.setAttribute('stroke','rgba(255,255,255,0.04)');
+      sep.setAttribute('stroke-width','1');
       svg.appendChild(sep);
     }
     var t = document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x', 30+(l-1)*layerW+layerW/2); t.setAttribute('y','13');
-    t.setAttribute('text-anchor','middle'); t.setAttribute('fill',LAYER_COLORS[i]);
-    t.setAttribute('font-size','8.5'); t.setAttribute('font-family','Share Tech Mono');
+    t.setAttribute('x', 30+(l-1)*layerW+layerW/2);
+    t.setAttribute('y', '13');
+    t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill', cfg.colors[i] || '#6366f1');
+    t.setAttribute('font-size','9');
+    t.setAttribute('font-family','Share Tech Mono');
     t.setAttribute('letter-spacing','0.5');
-    t.textContent = LAYER_LABELS[i] || '';
+    t.textContent = (cfg.layers[i]) || '';
     svg.appendChild(t);
   });
 
-  // 連接線
+  // 關係線
   var edgeStyle = {
-    supply:  {stroke:'#3b82f6', dash:'none',  w:'2'},
-    tech:    {stroke:'#8b5cf6', dash:'5,3',   w:'1.5'},
-    related: {stroke:'#6b7280', dash:'3,3',   w:'1'},
+    supply:  {stroke:'#3b82f6', dash:'none', w:'2'},
+    tech:    {stroke:'#8b5cf6', dash:'5,3',  w:'1.5'},
+    related: {stroke:'#6b7280', dash:'3,3',  w:'1'},
   };
   edges.forEach(function(e){
     var fp = nodePos[e.from], tp = nodePos[e.to];
     if(!fp||!tp) return;
-    var st = edgeStyle[e.type]||edgeStyle.related;
+    var st = edgeStyle[e.type] || edgeStyle.related;
     var mx = (fp.x+tp.x)/2;
     var path = document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d','M '+fp.x+' '+fp.y+' C '+mx+' '+fp.y+' '+mx+' '+tp.y+' '+tp.x+' '+tp.y);
-    path.setAttribute('stroke',st.stroke); path.setAttribute('stroke-width',st.w);
-    path.setAttribute('stroke-dasharray',st.dash); path.setAttribute('fill','none');
+    path.setAttribute('stroke', st.stroke);
+    path.setAttribute('stroke-width', st.w);
+    path.setAttribute('stroke-dasharray', st.dash);
+    path.setAttribute('fill','none');
     path.setAttribute('opacity','0.45');
     svg.appendChild(path);
   });
 
   // 節點
   nodes.forEach(function(n){
-    var pos = nodePos[n.id]; if(!pos) return;
-    var g = document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.setAttribute('cursor','pointer'); g.setAttribute('data-id',n.id);
-    var bw=118,bh=34,br=7;
+    var pos  = nodePos[n.id]; if(!pos) return;
+    var heat = NODE_HEAT[n.id] || 60;
+    var g    = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('cursor','pointer');
+    g.setAttribute('data-id', n.id);
+    g.setAttribute('data-theme', themeId);
+
+    var bw=120, bh=34, br=7;
     var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
-    rect.setAttribute('x',pos.x-bw/2); rect.setAttribute('y',pos.y-bh/2);
-    rect.setAttribute('width',bw); rect.setAttribute('height',bh); rect.setAttribute('rx',br);
-    rect.setAttribute('fill',n.color+'18'); rect.setAttribute('stroke',n.color+'66');
-    rect.setAttribute('stroke-width','1.5'); rect.setAttribute('class','node-rect');
+    rect.setAttribute('x', pos.x-bw/2); rect.setAttribute('y', pos.y-bh/2);
+    rect.setAttribute('width', bw); rect.setAttribute('height', bh);
+    rect.setAttribute('rx', br);
+    rect.setAttribute('fill', n.color+'18');
+    rect.setAttribute('stroke', n.color+'66');
+    rect.setAttribute('stroke-width','1.5');
+    rect.setAttribute('class','node-rect');
     g.appendChild(rect);
+
+    // 節點文字
     var txt = document.createElementNS('http://www.w3.org/2000/svg','text');
-    txt.setAttribute('x',pos.x); txt.setAttribute('y',pos.y+4);
-    txt.setAttribute('text-anchor','middle'); txt.setAttribute('fill','#ddeeff');
-    txt.setAttribute('font-size','10'); txt.setAttribute('font-family','Noto Sans TC,sans-serif');
+    txt.setAttribute('x', pos.x); txt.setAttribute('y', pos.y+2);
+    txt.setAttribute('text-anchor','middle');
+    txt.setAttribute('fill','#ddeeff');
+    txt.setAttribute('font-size','9.5');
+    txt.setAttribute('font-family','Noto Sans TC,sans-serif');
     txt.textContent = n.label;
     g.appendChild(txt);
-    g.addEventListener('click',   function(){ selectNode(n); });
-    g.addEventListener('mouseenter',function(){ rect.setAttribute('fill',n.color+'35'); rect.setAttribute('stroke',n.color); });
-    g.addEventListener('mouseleave',function(){
-      if(selectedNode&&selectedNode.id===n.id) return;
-      rect.setAttribute('fill',n.color+'18'); rect.setAttribute('stroke',n.color+'66');
+
+    // 熱度條（節點底部）
+    if(heat > 0){
+      var barBg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      barBg.setAttribute('x', pos.x-bw/2+4); barBg.setAttribute('y', pos.y+bh/2-6);
+      barBg.setAttribute('width', bw-8); barBg.setAttribute('height', 3);
+      barBg.setAttribute('rx', 1.5); barBg.setAttribute('fill','rgba(255,255,255,0.06)');
+      g.appendChild(barBg);
+      var heatColor = heat>=85?'#00e676':heat>=70?'#00d4ff':'#f5c518';
+      var barFg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      barFg.setAttribute('x', pos.x-bw/2+4); barFg.setAttribute('y', pos.y+bh/2-6);
+      barFg.setAttribute('width', Math.round((bw-8)*heat/100));
+      barFg.setAttribute('height', 3);
+      barFg.setAttribute('rx', 1.5); barFg.setAttribute('fill', heatColor);
+      barFg.setAttribute('opacity','0.8');
+      g.appendChild(barFg);
+    }
+
+    g.addEventListener('click', function(){ selectNode(n); });
+    g.addEventListener('mouseenter', function(){
+      rect.setAttribute('fill', n.color+'35');
+      rect.setAttribute('stroke', n.color);
+      rect.setAttribute('stroke-width','2');
+    });
+    g.addEventListener('mouseleave', function(){
+      if(selectedNode && selectedNode.id===n.id) return;
+      rect.setAttribute('fill', n.color+'18');
+      rect.setAttribute('stroke', n.color+'66');
+      rect.setAttribute('stroke-width','1.5');
     });
     svg.appendChild(g);
   });
@@ -216,21 +601,114 @@ function drawMap(nodes, edges){
 // ── 點選節點 ──
 function selectNode(node){
   selectedNode = node;
+  // 高亮選中節點
   var svg = document.getElementById('industry-svg');
   if(svg) svg.querySelectorAll('[data-id]').forEach(function(g){
     var rect = g.querySelector('.node-rect');
-    var nd   = (MOCK_NODES[currentTheme]||[]).find(function(n){ return n.id===g.getAttribute('data-id'); });
+    var nid  = g.getAttribute('data-id');
+    var nd   = (MOCK_NODES[currentTheme]||[]).find(function(n){ return n.id===nid; });
     if(!nd||!rect) return;
     if(nd.id===node.id){
-      rect.setAttribute('fill',nd.color+'50'); rect.setAttribute('stroke',nd.color); rect.setAttribute('stroke-width','2.5');
+      rect.setAttribute('fill', nd.color+'50');
+      rect.setAttribute('stroke', nd.color);
+      rect.setAttribute('stroke-width','2.5');
     } else {
-      rect.setAttribute('fill',nd.color+'18'); rect.setAttribute('stroke',nd.color+'66'); rect.setAttribute('stroke-width','1.5');
+      rect.setAttribute('fill', nd.color+'18');
+      rect.setAttribute('stroke', nd.color+'66');
+      rect.setAttribute('stroke-width','1.5');
     }
   });
-  document.getElementById('node-title').textContent    = node.label;
-  document.getElementById('node-subtitle').textContent = '載入相關個股中...';
-  document.getElementById('node-stocks-list').innerHTML = '<div style="text-align:center;padding:30px;color:var(--accent2);font-family:var(--mono);">⟳ 從 FinMind 載入...</div>';
-  fetchNodeStocks(node.id);
+
+  // 節點標題 + 熱度
+  var heat = NODE_HEAT[node.id] || 60;
+  var hc   = heat>=85?'var(--green)':heat>=70?'var(--accent2)':'var(--gold)';
+  var titleEl = document.getElementById('node-title');
+  var subEl   = document.getElementById('node-subtitle');
+  if(titleEl) titleEl.textContent = node.label;
+  if(subEl) subEl.innerHTML = '題材熱度 <span style="color:'+hc+';font-family:var(--mono);font-weight:700;">'+heat+'</span> · 載入個股中...';
+
+  document.getElementById('node-stocks-list').innerHTML =
+    '<div style="text-align:center;padding:20px;color:var(--accent2);font-family:var(--mono);font-size:10px;">⟳ 載入中...</div>';
+
+  // 優先用詳細資料，fallback 用 stock codes
+  var detailed = NODE_STOCKS_DATA[node.id];
+  if(detailed){
+    if(subEl) subEl.innerHTML = '題材熱度 <span style="color:'+hc+';font-family:var(--mono);font-weight:700;">'+heat+'</span> · 相關個股 '+detailed.length+' 檔';
+    renderNodeStocksDetailed(detailed);
+  } else {
+    fetchNodeStocks(node.id).then(function(){
+      if(subEl) subEl.innerHTML = '題材熱度 <span style="color:'+hc+';font-family:var(--mono);font-weight:700;">'+heat+'</span> · 相關個股';
+    });
+  }
+}
+
+// ── 渲染詳細個股資料（有 NODE_STOCKS_DATA）──
+function renderNodeStocksDetailed(stocks){
+  var el = document.getElementById('node-stocks-list');
+  if(!el) return;
+  if(!stocks.length){ el.innerHTML = '<div class="empty">無個股資料</div>'; return; }
+
+  el.innerHTML = stocks.map(function(s){
+    var sc = s.score>=85?'var(--green)':s.score>=75?'var(--accent)':s.score>=65?'var(--gold)':'var(--text2)';
+    var hc = s.heat>=85?'var(--green)':s.heat>=70?'var(--accent2)':'var(--gold)';
+    var iw = industryWatchlist.indexOf(s.code) >= 0;
+    var tags = (s.tags||[]).map(function(t){
+      return '<span style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:10px;padding:1px 7px;font-size:9px;color:var(--accent);font-family:var(--mono);">'+escHtml(t)+'</span>';
+    }).join(' ');
+
+    // 籌碼顏色
+    var chipColor = s.chip&&(s.chip.includes('買超')||s.chip.includes('大買'))?'var(--green)':
+                   s.chip&&s.chip.includes('賣超')?'var(--red)':'var(--text2)';
+
+    return '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:12px;margin-bottom:9px;transition:border-color 0.15s;" '+
+      'onmouseenter="this.style.borderColor=\'var(--border)\'" onmouseleave="this.style.borderColor=\'var(--border2)\'">' +
+      // 標題行
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">' +
+        '<div>' +
+          '<div style="display:flex;align-items:center;gap:7px;">' +
+            '<span style="font-size:14px;font-weight:700;color:var(--text1);">'+escHtml(s.name)+'</span>' +
+            '<span style="font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--bg3);padding:1px 6px;border-radius:3px;">'+s.code+'</span>' +
+          '</div>' +
+          '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+escHtml(s.sector)+'</div>' +
+        '</div>' +
+        '<div style="text-align:right;">' +
+          '<div style="font-family:var(--mono);font-size:18px;font-weight:700;color:'+sc+';">'+s.score+'</div>' +
+          '<div style="font-size:9px;color:var(--text3);">AI分</div>' +
+        '</div>' +
+      '</div>' +
+      // 題材熱度
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+        '<span style="font-size:9px;color:var(--text3);">題材熱度</span>' +
+        '<div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">' +
+          '<div style="width:'+s.heat+'%;height:100%;border-radius:2px;background:'+hc+';transition:width 0.5s;"></div>' +
+        '</div>' +
+        '<span style="font-family:var(--mono);font-size:10px;color:'+hc+';font-weight:700;">'+s.heat+'</span>' +
+      '</div>' +
+      // 狀態格
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">' +
+        '<div style="background:var(--bg3);border-radius:5px;padding:4px 7px;">' +
+          '<div style="font-size:8px;color:var(--text3);margin-bottom:1px;">技術</div>' +
+          '<div style="font-size:10px;font-weight:500;color:'+getTechColor(s.tech)+';">'+escHtml(s.tech||'—')+'</div>' +
+        '</div>' +
+        '<div style="background:var(--bg3);border-radius:5px;padding:4px 7px;">' +
+          '<div style="font-size:8px;color:var(--text3);margin-bottom:1px;">籌碼</div>' +
+          '<div style="font-size:10px;font-weight:500;color:'+chipColor+';">'+escHtml(s.chip||'—')+'</div>' +
+        '</div>' +
+        '<div style="background:var(--bg3);border-radius:5px;padding:4px 7px;">' +
+          '<div style="font-size:8px;color:var(--text3);margin-bottom:1px;">法人</div>' +
+          '<div style="font-size:10px;font-weight:500;color:var(--accent2);">'+escHtml(s.inst||'—')+'</div>' +
+        '</div>' +
+      '</div>' +
+      // 標籤 + 操作
+      '<div style="display:flex;justify-content:space-between;align-items:flex-end;">' +
+        '<div style="display:flex;flex-wrap:wrap;gap:3px;">'+tags+'</div>' +
+        '<div style="display:flex;gap:4px;flex-shrink:0;">' +
+          '<button onclick="openModal(\''+s.code+'\')" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.25);border-radius:4px;padding:2px 8px;font-size:9px;color:var(--accent);cursor:pointer;">詳情</button>' +
+          '<button onclick="toggleIndustryWatch(\''+s.code+'\',\''+escHtml(s.name)+'\',this)" style="background:transparent;border:1px solid '+(iw?'var(--accent2)':'var(--border)')+';border-radius:4px;padding:2px 8px;font-size:10px;color:'+(iw?'var(--accent2)':'var(--text3)')+';cursor:pointer;">'+(iw?'★':'☆')+'</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 // ── 從 FinMind 取個股資料 ──
@@ -351,7 +829,13 @@ function toggleIndustryWatch(code, name, btn){
 
 function initIndustryMap(){
   setTimeout(function(){
-    drawMap(MOCK_NODES['ai-compute'], MOCK_EDGES['ai-compute']);
+    drawMap(MOCK_NODES['ai-compute'], MOCK_EDGES['ai-compute'], 'ai-compute');
+    // 初始化主題熱度顯示
+    var heatEl = document.getElementById('theme-heat-display');
+    if(heatEl){
+      var h = THEME_HEAT['ai-compute'];
+      heatEl.innerHTML = '題材熱度：<span style="color:var(--green);font-weight:700;">'+h+'</span>';
+    }
   }, 100);
 }
 
