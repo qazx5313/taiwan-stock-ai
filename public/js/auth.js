@@ -134,7 +134,7 @@ function enterApp(){
   updateStatusBar();
   startClock();
   watchlist = loadLocal('tw_watchlist', []);
-  renderMarketStrip();
+  fetchMarketData();   // 抓 TWSE 真實大盤數據（非同步）
   renderDashTable();
   renderFullTable();
   renderRobotCards();

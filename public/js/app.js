@@ -47,26 +47,99 @@ function getDisplayStocks(){
   return TOP300.slice(0,30).map(function(code,i){ return genDemoStock(code,i); }).sort(function(a,b){ return b.ai-a.ai; });
 }
 
-// ── 市場大盤 ──
+// ── 市場大盤（TWSE 真實資料）──
+var marketCache = null;
+
+async function fetchMarketData(){
+  // TWSE 大盤指數（MI_INDEX）
+  var proxy = 'https://corsproxy.io/?';
+  try {
+    // 加權指數
+    var r = await fetch(proxy + encodeURIComponent('https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX'), {signal: AbortSignal.timeout(8000)});
+    if(r.ok){
+      var data = await r.json();
+      // 找到發行量加權股價指數
+      var taiex = (data || []).find(function(d){ return d.Index === '發行量加權股價指數' || d.name === '發行量加權股價指數'; });
+      if(taiex){
+        var val    = parseFloat((taiex.IndexOfLatestPrice || taiex.ClosingIndex || '0').replace(/,/g,''));
+        var chgVal = parseFloat((taiex.Change || '0').replace(/[+,]/g,''));
+        var chgPct = val > 0 ? (chgVal/val*100).toFixed(2) : '0.00';
+        marketCache = { taiex: val.toLocaleString('zh-TW'), chg: chgVal, chgPct: chgPct };
+      }
+    }
+  } catch(e){ console.warn('TWSE fetch:', e.message); }
+
+  renderMarketStrip();
+}
+
 function renderMarketStrip(){
+  var mc    = marketCache;
+  var taiex = mc ? mc.taiex   : '—';
+  var chg   = mc ? mc.chg     : 0;
+  var pct   = mc ? mc.chgPct  : '—';
+  var cls   = chg > 0 ? 'up' : chg < 0 ? 'dn' : 'neu';
+  var sign  = chg > 0 ? '▲ +' : '▼ ';
+  var chgStr = mc ? sign + Math.abs(chg).toFixed(1) + ' (' + (chg>0?'+':'') + pct + '%)' : '載入中...';
+
   var items = [
-    {label:'加權指數',val:'21,832',chg:'▲ +183 (+0.85%)',cls:'up'},
-    {label:'櫃買指數',val:'248.73',chg:'▲ +2.18 (+0.88%)',cls:'up'},
-    {label:'台指期',  val:'21,810',chg:'▼ -22 (-0.10%)', cls:'dn'},
-    {label:'市場情緒',val:'偏多',  chg:'貪婪指數 68',     cls:'up'},
-    {label:'外資買超',val:'+82億', chg:'連買 3日',         cls:'up'},
-    {label:'今日信號',val:String(stocks.length||'—'),chg:'AI精選',cls:'neu'},
+    {label:'加權指數',  val: taiex,                   chg: chgStr,         cls: cls},
+    {label:'更新時間',  val: new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}), chg:'TWSE 即時', cls:'neu'},
+    {label:'市場情緒',  val: chg>100?'強勢多':chg>0?'偏多':chg<-100?'強勢空':'偏空', chg:'今日走勢', cls: chg>=0?'up':'dn'},
+    {label:'外資動向',  val: '載入中', chg:'即時更新', cls:'neu'},
+    {label:'今日掃描',  val: String(stocks.length||'0'), chg:'已分析標的',  cls:'neu'},
+    {label:'符合條件',  val: String(stocks.filter(function(s){return s.ai>=CFG.ai_min;}).length||'0'), chg:'AI分≥'+CFG.ai_min, cls:'up'},
   ];
+
   var el = document.getElementById('mkt-strip');
   if(el) el.innerHTML = items.map(function(i){
     return '<div class="mc"><div class="mc-label">'+i.label+'</div>' +
       '<div class="mc-val '+i.cls+'">'+i.val+'</div>' +
       '<div class="mc-chg '+i.cls+'">'+i.chg+'</div></div>';
   }).join('');
+
+  // 更新頂部小字
   var twIdx = document.getElementById('tw-idx');
   var fv    = document.getElementById('foreign-val');
-  if(twIdx) twIdx.textContent = '21,832';
-  if(fv)    fv.textContent    = '+82億';
+  if(twIdx){ twIdx.textContent = taiex; twIdx.className = cls; }
+  if(fv)   { fv.textContent = '即時載入'; fv.className = 'neu'; }
+
+  // 同步抓外資數據
+  fetchForeignData();
+}
+
+async function fetchForeignData(){
+  var proxy = 'https://corsproxy.io/?';
+  try {
+    var r = await fetch(proxy + encodeURIComponent('https://openapi.twse.com.tw/v1/exchangeReport/MI_MARGN'), {signal: AbortSignal.timeout(8000)});
+    // fallback: 3大法人
+    var r2 = await fetch(proxy + encodeURIComponent('https://openapi.twse.com.tw/v1/exchangeReport/BFIAMU'), {signal: AbortSignal.timeout(8000)});
+    if(r2.ok){
+      var data = await r2.json();
+      if(data && data.length > 0){
+        var total = data.reduce(function(sum, d){
+          var buy  = parseInt((d.Foreign_Investor_Buy  || '0').replace(/,/g,''));
+          var sell = parseInt((d.Foreign_Investor_Sell || '0').replace(/,/g,''));
+          return sum + buy - sell;
+        }, 0);
+        var totalB = (total / 1000).toFixed(0); // 千股 → 億估算
+        var fvEl = document.getElementById('foreign-val');
+        if(fvEl){
+          fvEl.textContent = (total>=0?'+':'')+totalB+'億';
+          fvEl.className   = total>=0?'up':'dn';
+        }
+        // 更新 market strip 外資格
+        var strip = document.getElementById('mkt-strip');
+        if(strip){
+          var cards = strip.getElementsByClassName('mc');
+          if(cards[3]){
+            cards[3].querySelector('.mc-val').textContent = (total>=0?'+':'')+totalB+'億';
+            cards[3].querySelector('.mc-val').className   = 'mc-val '+(total>=0?'up':'dn');
+            cards[3].querySelector('.mc-chg').textContent = total>=0?'買超':'賣超';
+          }
+        }
+      }
+    }
+  } catch(e){ /* 靜默失敗 */ }
 }
 
 // ── 精選個股 ──
