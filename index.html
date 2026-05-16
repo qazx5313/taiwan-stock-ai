@@ -219,41 +219,57 @@
   <div class="robot-detail-panel" id="robot-detail">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div>
-        <div style="font-size:15px;font-weight:700;" id="rd-title">Peter · KD策略</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px;" id="rd-sub">點擊上方機器人卡片查看詳細</div>
+        <div style="font-size:15px;font-weight:700;" id="rd-title">選擇機器人</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="rd-sub">點擊上方卡片查看詳細</div>
       </div>
       <div style="display:flex;gap:8px;">
-        <button class="btn-g" id="rd-run-btn" onclick="runRobot()">▶ 執行回測+選股</button>
-        <button class="btn" onclick="applyRobotSignals()" id="rd-apply-btn">套用此邏輯選股</button>
+        <button class="btn-g" onclick="runAllRobots()">⚡ 全部執行今日操作</button>
+        <button class="btn-g" id="rd-run-btn" onclick="runRobot()">▶ 此機器人今日操作</button>
+        <button class="btn" onclick="applyRobotSignals()">套用此策略選股</button>
+        <button class="btn-d btn-sm" onclick="resetRobot(selectedRobotIdx)">重置</button>
       </div>
     </div>
-    <div class="g4" id="rd-stats" style="margin-bottom:14px;"></div>
+
+    <!-- 統計 -->
+    <div class="vts-grid" id="rd-stats" style="grid-template-columns:repeat(6,1fr);margin-bottom:14px;"></div>
+
     <div class="g2" style="margin-bottom:14px;">
+      <!-- 左：策略說明 -->
       <div>
-        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">策略邏輯說明</div>
-        <div style="font-size:11px;color:var(--text2);line-height:1.8;" id="rd-logic"></div>
-        <div style="margin-top:12px;">
-          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">優化建議（AI）</div>
-          <div style="font-size:11px;color:var(--accent2);line-height:1.8;background:var(--bg2);border:1px solid rgba(0,255,179,0.12);border-radius:6px;padding:10px;" id="rd-optimize"></div>
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">📋 進出場邏輯</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.8;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:10px;" id="rd-logic"></div>
+        <div style="margin-top:10px;">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:6px;font-family:var(--mono);">✅ 已套用的優化</div>
+          <div style="font-size:11px;line-height:1.8;background:rgba(0,255,179,0.04);border:1px solid rgba(0,255,179,0.15);border-radius:6px;padding:10px;" id="rd-optimize"></div>
         </div>
       </div>
+      <!-- 右：淨值曲線 -->
       <div>
-        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">淨值曲線</div>
-        <div class="cw" style="height:160px;"><canvas id="robot-equity-chart"></canvas></div>
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">📈 淨值曲線（初始100萬）</div>
+        <div class="cw" style="height:180px;"><canvas id="robot-equity-chart"></canvas></div>
       </div>
     </div>
-    <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">操作紀錄（最近20筆）</div>
-    <div class="tw"><table>
-      <thead><tr><th>日期</th><th>名稱</th><th>代號</th><th>動作</th><th>價格</th><th>張數</th><th>損益</th><th>原因</th><th>持有天</th><th>結果</th></tr></thead>
-      <tbody id="robot-log-tbody"></tbody>
+
+    <!-- 現有持倉 -->
+    <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">💼 現有持倉</div>
+    <div class="tw" style="margin-bottom:14px;"><table>
+      <thead><tr><th>名稱/代號</th><th>買進日</th><th>買進價</th><th>現價</th><th>持有天</th><th>未實現損益</th><th>損益%</th><th>停損價</th></tr></thead>
+      <tbody id="robot-holdings-tbody"><tr><td colspan="8" class="empty">尚無持倉</td></tr></tbody>
     </table></div>
-    <div style="margin-top:14px;">
-      <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">此策略目前推薦（套用後顯示）</div>
-      <div id="robot-picks" class="tw"><table>
-        <thead><tr><th>名稱</th><th>代號</th><th>現價</th><th>策略評分</th><th>建議入場</th><th>目標</th><th>停損</th><th>理由</th></tr></thead>
-        <tbody id="robot-picks-tbody"></tbody>
-      </table></div>
-    </div>
+
+    <!-- 操作紀錄 -->
+    <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">📝 操作紀錄（最近30筆）</div>
+    <div class="tw" style="margin-bottom:14px;"><table>
+      <thead><tr><th>日期</th><th>名稱/代號</th><th>動作</th><th>價格</th><th>張數</th><th>損益</th><th>原因</th><th>持有天</th><th>結果</th></tr></thead>
+      <tbody id="robot-log-tbody"><tr><td colspan="9" class="empty">點「今日操作」開始運作</td></tr></tbody>
+    </table></div>
+
+    <!-- 此策略推薦標的 -->
+    <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono);">🎯 此策略推薦標的（點「套用選股」顯示）</div>
+    <div class="tw"><table>
+      <thead><tr><th>名稱/代號</th><th>現價</th><th>AI分</th><th>建議入場</th><th>目標</th><th>策略停損</th><th>理由</th></tr></thead>
+      <tbody id="robot-picks-tbody"><tr><td colspan="7" class="empty">點上方「套用此策略選股」</td></tr></tbody>
+    </table></div>
   </div>
 </div>
 
