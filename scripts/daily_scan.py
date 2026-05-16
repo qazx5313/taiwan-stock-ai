@@ -94,34 +94,60 @@ def api_call(params):
 # ════════════════════════════════════════════
 
 def get_stock_list():
-    """取得所有上市上櫃股票（1次API，有快取則跳過）"""
-    # 嘗試從快取讀（同一天不重複抓）
+    """取得「今天有交易」的上市上櫃股票（TaiwanStockInfo × 近日成交量過濾）"""
     cache_file = 'scripts/output/stock_list.json'
     today = datetime.now().strftime('%Y-%m-%d')
     if os.path.exists(cache_file):
         with open(cache_file) as f:
             cached = json.load(f)
-        if cached.get('date') == today:
+        if cached.get('date') == today and len(cached.get('stocks', {})) > 100:
             print(f"  使用快取股票清單（{len(cached['stocks'])} 檔）")
             return cached['stocks'], cached['sectors']
 
+    # Step 1: 取基本資料（名稱、產業、市場別）
     print("取得股票清單（TaiwanStockInfo）...")
-    data = api_call({'dataset': 'TaiwanStockInfo'})
-    stocks  = {}
-    sectors = {}
-    for d in data:
+    info_data = api_call({'dataset': 'TaiwanStockInfo'})
+    all_info = {}
+    sectors  = {}
+    for d in info_data:
         sid  = str(d.get('stock_id',   '')).strip()
         name = str(d.get('stock_name', '')).strip()
         typ  = str(d.get('type',       '')).strip()
         cat  = str(d.get('industry_category', '—')).strip()
-        if not sid or not name:    continue
-        if len(sid) != 4:          continue   # 只要4位數普通股
-        if not sid.isdigit():      continue   # 排除非數字
+        if not sid or not name:         continue
+        if len(sid) != 4:               continue
+        if not sid.isdigit():           continue
         if typ not in ('twse', 'tpex'): continue
-        stocks[sid]  = name
-        sectors[sid] = cat
+        if any(x in name for x in ['指數','ETF','基金','債券','期貨']): continue
+        all_info[sid] = name
+        sectors[sid]  = cat
+    print(f"  TaiwanStockInfo 共 {len(all_info)} 筆（含已下市）")
 
-    print(f"  上市(twse)+上櫃(tpex) 共 {len(stocks)} 檔")
+    # Step 2: 取近5日有成交量的股票（= 現在還在交易）
+    print("取得近日成交資料（過濾已下市）...")
+    end_date   = datetime.now()
+    start_date = end_date - timedelta(days=5)
+    fmt = lambda d: d.strftime('%Y-%m-%d')
+    try:
+        price_data = api_call({
+            'dataset':    'TaiwanStockPrice',
+            'start_date': fmt(start_date),
+            'end_date':   fmt(end_date),
+        })
+        active_ids = set()
+        for d in price_data:
+            sid = str(d.get('stock_id', '')).strip()
+            vol = int(d.get('Trading_Volume', 0) or 0)
+            if vol > 0 and len(sid) == 4 and sid.isdigit():
+                active_ids.add(sid)
+        print(f"  近5日有成交：{len(active_ids)} 檔")
+    except Exception as e:
+        print(f"  ⚠️  取成交資料失敗: {e}，使用原始清單")
+        active_ids = set(all_info.keys())
+
+    # Step 3: 交叉比對 → 只保留在交易中且有名稱的股票
+    stocks = {sid: all_info[sid] for sid in active_ids if sid in all_info}
+    print(f"  ✅ 確認在交易中：{len(stocks)} 檔")
 
     os.makedirs('scripts/output', exist_ok=True)
     with open(cache_file, 'w', encoding='utf-8') as f:
@@ -333,11 +359,11 @@ def compute_score(code, name, sector, candles, chips):
         'target2':     round(price * 1.12,  1),
         'stop_loss':   sl,
         'risk_level':  risk_lvl,
-        'tech_detail': json.dumps({'ma5':round(ma5,1),'ma20':round(ma20,1),
+        'tech_detail': {'ma5':round(ma5,1),'ma20':round(ma20,1),
             'ma60':round(ma60,1),'rsi':round(rsi,1),
-            'kd_k':kd_k,'kd_d':kd_d,'macd_hist':macd_h}, ensure_ascii=False),
-        'chip_detail': json.dumps({'foreign':chips['foreign'],
-            'trust':chips['trust'],'dealer':chips['dealer']}, ensure_ascii=False),
+            'kd_k':kd_k,'kd_d':kd_d,'macd_hist':macd_h},
+        'chip_detail': {'foreign':chips['foreign'],
+            'trust':chips['trust'],'dealer':chips['dealer']},
         'reason': f"技術面{tech}/35，籌碼面{chip}/30，量價{vs}/20，風控{risk}/15。" +
                   (f"外資{'買超' if chips['foreign']>0 else '賣超'}{abs(chips['foreign'])}億，" if chips['foreign'] != 0 else '') +
                   (f"RSI {round(rsi,0):.0f}，" if rsi else '') +
