@@ -70,3 +70,19 @@ CREATE POLICY "anon all robot_trades" ON robot_trades FOR ALL USING (true);
 -- 索引
 CREATE INDEX IF NOT EXISTS idx_robot_trades_robot_id ON robot_trades(robot_id);
 CREATE INDEX IF NOT EXISTS idx_robot_trades_date ON robot_trades(trade_date DESC);
+
+-- ============================================================
+-- 掃描進度追蹤表（解決重複掃描問題）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS scan_progress (
+  scan_date     DATE PRIMARY KEY,
+  last_index    INTEGER DEFAULT 0,      -- 下次從第幾個代號開始
+  scanned_count INTEGER DEFAULT 0,      -- 今日已掃幾檔
+  total_count   INTEGER DEFAULT 0,      -- 今日股票總數
+  completed     BOOLEAN DEFAULT FALSE,  -- 是否全部掃完
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE scan_progress ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all scan_progress" ON scan_progress;
+CREATE POLICY "anon all scan_progress" ON scan_progress FOR ALL USING (true);
