@@ -349,7 +349,7 @@ async function loadFromSupabase(){
 
   try{
     // 取最新一天的資料
-    var r = await fetch(sbUrl + '/rest/v1/stock_scores?select=*&order=total_score.desc&limit=500', {
+    var r = await fetch(sbUrl + '/rest/v1/stock_scores?select=*&order=total_score.desc&limit=1000', {
       headers:{ 'apikey':sbKey, 'Authorization':'Bearer '+sbKey }
     });
     if(!r.ok) throw new Error('HTTP '+r.status);
