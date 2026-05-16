@@ -97,6 +97,8 @@
     <button class="nb active" onclick="goTab('dashboard',this)">儀表板</button>
     <button class="nb" onclick="goTab('signals',this)" id="nav-signals">爆升選股</button>
     <button class="nb" onclick="goTab('indicators',this)" id="nav-indicators">指標選股</button>
+    <button class="nb" onclick="goTab('industry',this)" id="nav-industry">產業鏈地圖</button>
+    <button class="nb" onclick="goTab('news',this)" id="nav-news">重大公告</button>
     <button class="nb" onclick="goTab('robots',this)" id="nav-robots">策略機器人</button>
     <button class="nb" onclick="goTab('report',this)" id="nav-report">每日報告</button>
     <button class="nb admin-nb" onclick="goTab('admin',this)" id="admin-nav-btn" style="display:none;">管理後台</button>
@@ -116,59 +118,61 @@
 
 <!-- ────────── DASHBOARD ────────── -->
 <div class="tab-page active" id="tab-dashboard">
-  <div class="g6" id="mkt-strip"></div>
-  <div class="g-aside" style="margin-bottom:13px;">
-    <div class="panel">
-      <div class="pt">AI 精選個股</div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px;">
-        <div>
-          <div style="font-size:15px;font-weight:700;" id="feat-name">載入中...</div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px;" id="feat-code">—</div>
-        </div>
-        <span class="badge b-break" id="feat-badge">—</span>
-      </div>
-      <div style="text-align:center;padding:6px 0;">
-        <svg viewBox="0 0 120 120" width="110" height="110" style="display:block;margin:0 auto;">
-          <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(0,212,255,0.08)" stroke-width="10"/>
-          <circle cx="60" cy="60" r="50" fill="none" stroke="url(#rg)" stroke-width="10" stroke-dasharray="0 314" stroke-linecap="round" id="ring-arc" style="transition:stroke-dasharray 0.9s ease;" transform="rotate(-90 60 60)"/>
-          <defs><linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#1a6fff"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
-          <text x="60" y="53" text-anchor="middle" fill="#ddeeff" font-size="24" font-weight="700" font-family="'Share Tech Mono'" id="ring-num">—</text>
-          <text x="60" y="69" text-anchor="middle" fill="#2d5070" font-size="9" font-family="'Share Tech Mono'">AI 綜合分</text>
-        </svg>
-      </div>
-      <div id="score-bars"></div>
-      <div class="ai-box" id="feat-reason">AI 分析載入中...</div>
-      <div class="px-grid">
-        <div class="px"><div class="px-lbl">建議入場</div><div class="px-v px-entry" id="feat-entry">—</div></div>
-        <div class="px"><div class="px-lbl">目標一/二</div><div class="px-v px-tgt" id="feat-target">—</div></div>
-        <div class="px"><div class="px-lbl">停損</div><div class="px-v px-sl" id="feat-stop">—</div></div>
-      </div>
-      <div style="margin-top:11px;display:flex;gap:6px;">
-        <button class="btn btn-sm" onclick="openModal(featuredCode)">詳情分析</button>
-        <button class="btn-g btn-sm" onclick="toast('請至策略機器人頁面加入交易')">+加入機器人</button>
-      </div>
-    </div>
+  <!-- 大盤行情列 -->
+  <div class="g6" id="mkt-strip" style="margin-bottom:13px;"></div>
+
+  <!-- 主內容：大戶籌碼 + 重大資訊 -->
+  <div class="g2" style="margin-bottom:13px;">
+
+    <!-- 大戶籌碼排行 -->
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div class="pt" style="margin-bottom:0;">今日爆升股信號</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <div class="ftabs" style="margin-bottom:0;">
-            <button class="ft active" onclick="dashFilter('all',this)">全部</button>
-            <button class="ft" onclick="dashFilter('break',this)">突破</button>
-            <button class="ft" onclick="dashFilter('whale',this)">主力</button>
-            <button class="ft" onclick="dashFilter('low',this)">低風險</button>
-          </div>
-          <button class="btn btn-sm" id="dash-scan-btn" onclick="runScreener()" style="display:none;">⟳ 重新整理</button>
+        <div class="pt" style="margin-bottom:0;">🐋 大戶籌碼排行</div>
+        <div style="display:flex;gap:5px;">
+          <select id="holder-lot" class="full-input" style="width:85px;padding:3px 6px;font-size:10px;" onchange="renderBigHolder()">
+            <option value="200">200張</option>
+            <option value="400" selected>400張</option>
+            <option value="800">800張</option>
+            <option value="1000">1000張</option>
+          </select>
+          <select id="holder-week" class="full-input" style="width:75px;padding:3px 6px;font-size:10px;" onchange="renderBigHolder()">
+            <option value="1">1週</option>
+            <option value="2" selected>2週</option>
+            <option value="3">3週</option>
+            <option value="4">4週</option>
+          </select>
         </div>
       </div>
-      <div id="fetch-status" style="display:none;" class="info-box"></div>
-      <div class="tw"><table>
-        <thead><tr><th>名稱</th><th>代號</th><th>現價</th><th>漲跌</th><th>信號</th><th>AI分</th><th>爆升率</th><th>風險</th><th>入場</th><th></th></tr></thead>
-        <tbody id="dash-tbody"></tbody>
-      </table></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>#</th><th>名稱</th><th>原持股</th><th>最新</th><th>增加張數</th><th>增加%</th><th>AI籌碼</th><th>AI判斷</th></tr></thead>
+          <tbody id="big-holder-tbody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;text-align:right;">
+        <button class="btn btn-sm" onclick="goTab('industry',document.getElementById('nav-industry'))">查看產業鏈地圖 →</button>
+      </div>
+    </div>
+
+    <!-- 重大資訊觀測站 -->
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="pt" style="margin-bottom:0;">📡 重大資訊觀測站</div>
+        <div style="display:flex;gap:5px;">
+          <button class="ft active" id="news-dash-tab-all"  onclick="filterDashNews('all',this)"  style="padding:3px 8px;font-size:9px;">全部</button>
+          <button class="ft" id="news-dash-tab-bull" onclick="filterDashNews('bull',this)" style="padding:3px 8px;font-size:9px;">利多</button>
+          <button class="ft" id="news-dash-tab-bear" onclick="filterDashNews('bear',this)" style="padding:3px 8px;font-size:9px;">利空</button>
+          <button class="ft" id="news-dash-tab-high" onclick="filterDashNews('high',this)" style="padding:3px 8px;font-size:9px;">高影響</button>
+        </div>
+      </div>
+      <div id="dash-news-list"></div>
+      <div style="margin-top:10px;text-align:right;">
+        <button class="btn btn-sm" onclick="goTab('news',document.getElementById('nav-news'))">查看全部公告 →</button>
+      </div>
     </div>
   </div>
 </div>
+
 
 <!-- ────────── SIGNALS ────────── -->
 <div class="tab-page" id="tab-signals">
@@ -211,6 +215,59 @@
       <thead><tr><th>名稱</th><th>代號</th><th>現價</th><th>漲跌%</th><th>量(億)</th><th>技術/35</th><th>籌碼/30</th><th>量價/20</th><th>風控/15</th><th>AI分</th><th>爆升率</th><th>信號</th><th>入場</th><th>目標一</th><th>停損</th><th>風險</th><th>操作</th></tr></thead>
       <tbody id="full-tbody"></tbody>
     </table></div>
+  </div>
+</div>
+
+<!-- ────────── INDUSTRY MAP ────────── -->
+<div class="tab-page" id="tab-industry">
+  <!-- 主題 Tab -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+    <button class="ft active" id="theme-ai" onclick="switchTheme('ai-compute',this)">🤖 AI 算力主鏈</button>
+    <button class="ft" id="theme-consumer" onclick="switchTheme('consumer',this)">📱 消費與終端</button>
+    <button class="ft" id="theme-wafer" onclick="switchTheme('wafer',this)">⚙️ 晶圓製造上游</button>
+    <button class="ft" id="theme-green" onclick="switchTheme('green',this)">⚡ 綠色能源</button>
+    <button class="ft" id="theme-digital" onclick="switchTheme('digital',this)">🌐 數位與服務</button>
+    <span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:auto;">點擊節點查看相關個股</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:13px;">
+    <!-- 左：產業鏈地圖 -->
+    <div class="panel" style="padding:0;overflow:hidden;">
+      <div id="industry-map-container" style="position:relative;width:100%;height:580px;background:var(--bg0);overflow:hidden;cursor:grab;">
+        <!-- SVG 地圖由 JS 動態繪製 -->
+        <svg id="industry-svg" width="100%" height="100%"></svg>
+        <!-- 圖例 -->
+        <div style="position:absolute;bottom:12px;left:12px;background:rgba(6,15,30,0.9);border:1px solid var(--border);border-radius:6px;padding:8px 12px;">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:6px;">圖例</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;gap:7px;font-size:10px;color:var(--text2);">
+              <svg width="28" height="4"><line x1="0" y1="2" x2="28" y2="2" stroke="#3b82f6" stroke-width="2"/></svg>供應關係
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:10px;color:var(--text2);">
+              <svg width="28" height="4"><line x1="0" y1="2" x2="28" y2="2" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="4,2"/></svg>技術關係
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:10px;color:var(--text2);">
+              <svg width="28" height="4"><line x1="0" y1="2" x2="28" y2="2" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="3,3"/></svg>關聯關係
+            </div>
+          </div>
+        </div>
+        <!-- 層級標籤 -->
+        <div id="layer-labels" style="position:absolute;top:12px;left:0;right:0;pointer-events:none;"></div>
+      </div>
+    </div>
+
+    <!-- 右：個股清單 -->
+    <div>
+      <div class="panel" id="node-detail-panel">
+        <div id="node-detail-header" style="margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:700;color:var(--text1);" id="node-title">點選左側節點</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;" id="node-subtitle">查看相關上市公司</div>
+        </div>
+        <div id="node-stocks-list">
+          <div class="empty" style="padding:40px 20px;">← 點擊產業鏈節點<br>查看相關個股</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -363,6 +420,103 @@
         <b style="color:var(--green);">停利二：</b>到達布林上軌全出<br>
         <b style="color:var(--text3);">注意：</b>布林通道持續擴張時不做逆勢，強趨勢空頭不接刀
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────── NEWS MONITOR ────────── -->
+<div class="tab-page" id="tab-news">
+
+  <!-- 控制列 -->
+  <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
+    <div class="ftabs" style="margin-bottom:0;">
+      <button class="ft active" onclick="filterNews('all',this)">全部</button>
+      <button class="ft" onclick="filterNews('bull',this)">📈 利多</button>
+      <button class="ft" onclick="filterNews('bear',this)">📉 利空</button>
+      <button class="ft" onclick="filterNews('neutral',this)">⚖️ 中性</button>
+      <button class="ft" onclick="filterNews('high',this)">🔥 高影響</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-left:auto;align-items:center;">
+      <input id="news-search" class="full-input" placeholder="搜尋股票名稱或代號" style="width:160px;padding:5px 10px;font-size:11px;">
+      <select id="news-days" class="full-input" style="width:110px;padding:5px;font-size:11px;">
+        <option value="1">今日</option>
+        <option value="3" selected>近3日</option>
+        <option value="7">近7日</option>
+        <option value="30">近30日</option>
+      </select>
+      <button class="btn" onclick="fetchNews()">⟳ 載入公告</button>
+      <button class="btn-g btn-sm" onclick="autoAnalyzeAll()">🤖 AI全部分析</button>
+    </div>
+  </div>
+
+  <!-- 統計列 -->
+  <div class="g4" style="margin-bottom:13px;" id="news-stats-grid">
+    <div class="vts"><div class="vts-lbl">今日公告總數</div><div class="vts-val" id="stat-total">—</div></div>
+    <div class="vts"><div class="vts-lbl">利多公告</div><div class="vts-val up" id="stat-bull">—</div></div>
+    <div class="vts"><div class="vts-lbl">利空公告</div><div class="vts-val dn" id="stat-bear">—</div></div>
+    <div class="vts"><div class="vts-lbl">高影響公告</div><div class="vts-val" style="color:var(--gold);" id="stat-high">—</div></div>
+  </div>
+
+  <!-- 四重篩選條件 -->
+  <div class="panel" style="margin-bottom:13px;" id="news-filter-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="pt" style="margin-bottom:0;">四重篩選條件 <span style="font-family:var(--mono);font-size:9px;color:var(--text3);">（全部通過才選入）</span></div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <div class="tog on" id="four-filter-tog" onclick="toggleFourFilter(this)"><div class="tog-thumb"></div></div>
+        <span style="font-size:10px;color:var(--text2);" id="four-filter-label">已啟用</span>
+      </div>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>#</th><th>條件</th><th>門檻設定</th><th>說明</th><th>目前狀態</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--accent);">1</td>
+            <td>台指 VIX 恐慌指數</td>
+            <td><input id="filter-vix" type="number" value="40" min="10" max="80" style="width:70px;" class="full-input" onchange="updateFilterStatus()"> ≥</td>
+            <td style="font-size:10px;color:var(--text3);">市場處於恐慌狀態，逆勢機會出現</td>
+            <td id="st-vix"><span class="badge b-wait">等待資料</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--accent);">2</td>
+            <td>月K 低檔條件</td>
+            <td>月K &lt; <input id="filter-kd" type="number" value="30" min="10" max="50" style="width:55px;" class="full-input"> 且月D &lt; <input id="filter-kd2" type="number" value="30" min="10" max="50" style="width:55px;" class="full-input"></td>
+            <td style="font-size:10px;color:var(--text3);">月線動能在低檔區</td>
+            <td id="st-kd"><span class="badge b-wait">等待資料</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--accent);">3</td>
+            <td>股價淨值比</td>
+            <td>PBR &lt; <input id="filter-pbr" type="number" value="1.2" min="0.5" max="3" step="0.1" style="width:65px;" class="full-input"></td>
+            <td style="font-size:10px;color:var(--text3);">股價接近或低於淨值（便宜）</td>
+            <td id="st-pbr"><span class="badge b-wait">等待資料</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--accent);">4</td>
+            <td>現金殖利率</td>
+            <td>≥ <input id="filter-yield" type="number" value="8" min="3" max="20" style="width:60px;" class="full-input"> %</td>
+            <td style="font-size:10px;color:var(--text3);">高現金配息回報</td>
+            <td id="st-yield"><span class="badge b-wait">等待資料</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 公告列表 -->
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;">
+      <div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3);">公告數：</span>
+        <span id="news-count" style="font-family:var(--mono);font-size:12px;color:var(--accent2);">0</span>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3);"> 則</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);">更新：<span id="news-update-time">—</span></div>
+    </div>
+
+    <!-- 公告卡片容器 -->
+    <div id="news-container">
+      <div class="empty">點「載入公告」取得最新重大訊息</div>
     </div>
   </div>
 </div>
@@ -699,13 +853,14 @@
 <div class="toast" id="toast"></div>
 
 <!-- ═══ SCRIPTS (載入順序重要) ═══ -->
-<script src="public/js/config.js"></script>   <!-- 1. 設定、股票名稱 -->
-<script src="public/js/auth.js"></script>      <!-- 2. 登入、帳號管理 -->
-<script src="public/js/finmind.js"></script>   <!-- 3. FinMind API、評分 -->
-<script src="public/js/robots.js"></script>    <!-- 4. AI 策略機器人 -->
-<script src="public/js/indicators.js"></script> <!-- 5. 指標選股 MACD+布林 -->
-<script src="public/js/app.js"></script>       <!-- 6. 選股、渲染、後台 -->
-<script src="public/js/modal-report.js"></script> <!-- 7. Modal、報告 -->
+<script src="public/js/config.js"></script>
+<script src="public/js/auth.js"></script>
+<script src="public/js/finmind.js"></script>
+<script src="public/js/robots.js"></script>
+<script src="public/js/indicators.js"></script>
+<script src="public/js/industry.js"></script>
+<script src="public/js/app.js"></script>
+<script src="public/js/modal-report.js"></script>
 
 <script>
 // ═══════════════════════════════════

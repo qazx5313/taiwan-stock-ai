@@ -534,9 +534,12 @@ function goTab(tab, btn){
   if(tabEl) tabEl.classList.add('active');
   if(btn) btn.classList.add('active');
 
-  if(tab === 'profile') renderProfile();
-  if(tab === 'admin')   { renderUserTable(); renderWatchlist(); updateCacheStatus(); }
-  if(tab === 'report')  { renderReportList(); }
+  if(tab === 'profile')  renderProfile();
+  if(tab === 'admin')    { renderUserTable(); renderWatchlist(); updateCacheStatus(); }
+  if(tab === 'report')   { renderReportList(); }
+  if(tab === 'industry') { initIndustryMap(); }
+  if(tab === 'news')     { renderNewsPage(); updateFilterStatus(); }
+  if(tab === 'dashboard'){ initDashboard(); }
 }
 
 // ── 匯出 CSV ──

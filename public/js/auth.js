@@ -162,6 +162,7 @@ function enterApp(){
   initReport();
   initAdmin();
   renderProfile();
+  initDashboard(); // 大戶籌碼 + 重大資訊初始化
   document.getElementById('st-count').textContent = (typeof stocks !== 'undefined' ? stocks.length : 0) || '0';
   toast('歡迎回來，' + (u.display || u.username) + '！');
 }
