@@ -95,9 +95,10 @@
   </div>
   <div class="nav" id="main-nav">
     <button class="nb active" onclick="goTab('dashboard',this)">儀表板</button>
-    <button class="nb" onclick="goTab('signals',this)">爆升選股</button>
-    <button class="nb" onclick="goTab('robots',this)">策略機器人</button>
-    <button class="nb" onclick="goTab('report',this)">每日報告</button>
+    <button class="nb" onclick="goTab('signals',this)" id="nav-signals">爆升選股</button>
+    <button class="nb" onclick="goTab('indicators',this)" id="nav-indicators">指標選股</button>
+    <button class="nb" onclick="goTab('robots',this)" id="nav-robots">策略機器人</button>
+    <button class="nb" onclick="goTab('report',this)" id="nav-report">每日報告</button>
     <button class="nb admin-nb" onclick="goTab('admin',this)" id="admin-nav-btn" style="display:none;">管理後台</button>
   </div>
   <div class="topbar-right">
@@ -210,6 +211,159 @@
       <thead><tr><th>名稱</th><th>代號</th><th>現價</th><th>漲跌%</th><th>量(億)</th><th>技術/35</th><th>籌碼/30</th><th>量價/20</th><th>風控/15</th><th>AI分</th><th>爆升率</th><th>信號</th><th>入場</th><th>目標一</th><th>停損</th><th>風險</th><th>操作</th></tr></thead>
       <tbody id="full-tbody"></tbody>
     </table></div>
+  </div>
+</div>
+
+<!-- ────────── INDICATOR SCREENER ────────── -->
+<div class="tab-page" id="tab-indicators">
+
+  <!-- 策略選擇 -->
+  <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;">選擇策略：</div>
+    <button class="ft active" id="ind-tab-macd" onclick="switchIndicatorTab('macd',this)">📈 MACD 順勢策略</button>
+    <button class="ft" id="ind-tab-boll" onclick="switchIndicatorTab('boll',this)">📊 布林通道逆勢策略</button>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn" onclick="runIndicatorScreener()">▶ 執行選股</button>
+      <button class="btn-g btn-sm" onclick="exportIndicatorCSV()">↓ CSV</button>
+    </div>
+  </div>
+
+  <!-- MACD 策略說明 -->
+  <div id="ind-desc-macd" class="panel" style="margin-bottom:13px;">
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;">MACD 順勢策略 · 多方條件</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+          ① 收盤 &gt; 20MA 且 20MA 向上<br>
+          ② 5MA &gt; 10MA &gt; 20MA 多頭排列<br>
+          ③ MACD 綠柱縮短 → 柱狀體由綠轉紅<br>
+          ④ DIF 向上靠近 DEA（收斂後轉強）<br>
+          ⑤ 突破 MACD 收斂期間最高價<br>
+          ⑥ 成交量 &gt; 5日均量 1.3倍
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:2px;margin-bottom:8px;">風險過濾</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+          ✗ 乖離率 &gt; 15% 不追高<br>
+          ✗ 大量長上影線排除<br>
+          ✗ 純靠金叉死叉不進場<br>
+          ✗ 必須先確認趨勢方向
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px;">評分權重</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+          趨勢方向 35分<br>
+          MACD狀態 30分<br>
+          量價確認 20分<br>
+          風險過濾 15分
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 布林策略說明 -->
+  <div id="ind-desc-boll" class="panel" style="margin-bottom:13px;display:none;">
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--accent2);letter-spacing:2px;margin-bottom:8px;">布林通道 · 多單條件（逆勢反彈）</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+          ① 股價觸碰或跌破布林下軌<br>
+          ② 下一根K棒重新收回下軌之上<br>
+          ③ RSI &lt; 35 後開始回升<br>
+          ④ 無恐慌式暴量下殺<br>
+          ⑤ 未跌破重要支撐<br>
+          目標：中軌 → 上軌
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:2px;margin-bottom:8px;">布林通道 · 空單條件（過熱回落）</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+          ① 股價觸碰或突破布林上軌<br>
+          ② 下一根K棒跌回上軌之下<br>
+          ③ RSI &gt; 65 後開始轉弱<br>
+          ④ 非強勢放量突破<br>
+          ⑤ 布林通道未持續擴張<br>
+          目標：中軌 → 下軌
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px;">AI 評分</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+          布林位置 30分<br>
+          RSI狀態 20分<br>
+          趨勢濾網 20分<br>
+          量價風險 15分<br>
+          支撐壓力 15分
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 進度條 -->
+  <div id="ind-progress" style="display:none;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--accent2);" id="ind-status">分析中...</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);" id="ind-count">0/0</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="ind-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- 結果表格 -->
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;">
+      <div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;">篩選結果：</span>
+        <span id="ind-result-count" style="font-family:var(--mono);font-size:11px;color:var(--accent2);">0</span>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3);"> 檔符合條件</span>
+      </div>
+      <div class="ftabs" style="margin-bottom:0;">
+        <button class="ft active" onclick="filterIndicator('all',this)">全部</button>
+        <button class="ft" onclick="filterIndicator('bull',this)">多方</button>
+        <button class="ft" onclick="filterIndicator('bear',this)">空方</button>
+        <button class="ft" onclick="filterIndicator('high',this)">高分優先</button>
+      </div>
+    </div>
+    <div class="tw">
+      <table id="ind-table">
+        <thead>
+          <tr>
+            <th>名稱</th><th>代號</th><th>現價</th><th>趨勢</th>
+            <th>策略狀態</th><th>順勢分數</th><th>方向</th>
+            <th>觀察價</th><th>進場價</th><th>停損</th>
+            <th>目標一</th><th>目標二</th><th>風險</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="ind-tbody">
+          <tr><td colspan="14" class="empty">請點「執行選股」開始分析</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 回測說明 -->
+  <div class="g2" style="margin-top:13px;">
+    <div class="panel">
+      <div class="pt">MACD 順勢策略 · 回測規則</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.9;">
+        <b style="color:var(--accent2);">進場：</b>MACD 柱狀體由綠轉紅且突破收斂高點，次日以開盤價進場<br>
+        <b style="color:var(--red);">停損：</b>跌破收斂期間最低價（或 -5%），哪個先到以哪個為準<br>
+        <b style="color:var(--green);">停利一：</b>漲幅達 8%，出場一半倉位<br>
+        <b style="color:var(--green);">停利二：</b>MACD 紅柱開始縮短，全部出場<br>
+        <b style="color:var(--text3);">注意：</b>必須搭配趨勢確認，空頭市場不做多單
+      </div>
+    </div>
+    <div class="panel">
+      <div class="pt">布林通道策略 · 回測規則</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.9;">
+        <b style="color:var(--accent2);">進場：</b>股價觸下軌後收回，次日確認站穩再進場<br>
+        <b style="color:var(--red);">停損：</b>跌破前低或布林下軌外側 1%<br>
+        <b style="color:var(--green);">停利一：</b>到達布林中軌出場一半<br>
+        <b style="color:var(--green);">停利二：</b>到達布林上軌全出<br>
+        <b style="color:var(--text3);">注意：</b>布林通道持續擴張時不做逆勢，強趨勢空頭不接刀
+      </div>
+    </div>
   </div>
 </div>
 
@@ -549,8 +703,9 @@
 <script src="public/js/auth.js"></script>      <!-- 2. 登入、帳號管理 -->
 <script src="public/js/finmind.js"></script>   <!-- 3. FinMind API、評分 -->
 <script src="public/js/robots.js"></script>    <!-- 4. AI 策略機器人 -->
-<script src="public/js/app.js"></script>       <!-- 5. 選股、渲染、後台 -->
-<script src="public/js/modal-report.js"></script> <!-- 6. Modal、報告 -->
+<script src="public/js/indicators.js"></script> <!-- 5. 指標選股 MACD+布林 -->
+<script src="public/js/app.js"></script>       <!-- 6. 選股、渲染、後台 -->
+<script src="public/js/modal-report.js"></script> <!-- 7. Modal、報告 -->
 
 <script>
 // ═══════════════════════════════════

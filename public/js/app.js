@@ -513,7 +513,7 @@ function goTab(tab, btn){
 
   if(!isAdmin){
     // 一般用戶才需要檢查權限
-    var permMap = { signals:'signals', robots:'robots', report:'report' };
+    var permMap = { signals:'signals', robots:'robots', report:'report', indicators:'signals' };
     var requiredPerm = permMap[tab];
     if(requiredPerm){
       var hasPerm = currentUser && currentUser.perms && currentUser.perms[requiredPerm];
