@@ -127,6 +127,10 @@ function enterApp(){
   var adminBtn = document.getElementById('admin-nav-btn');
   if(adminBtn) adminBtn.style.display = (u.role === 'admin') ? '' : 'none';
 
+  // 只有管理員才顯示報告管理面板
+  var repAdmin = document.getElementById('report-admin-panel');
+  if(repAdmin) repAdmin.style.display = (u.role === 'admin') ? '' : 'none';
+
   // 根據權限顯示/隱藏導覽按鈕
   applyNavPermissions(u);
 
@@ -134,7 +138,8 @@ function enterApp(){
   updateStatusBar();
   startClock();
   watchlist = loadLocal('tw_watchlist', []);
-  fetchMarketData();   // 抓 TWSE 真實大盤數據（非同步）
+  loadStockList();     // 從 FinMind 載入完整上市上櫃清單
+  fetchMarketData();   // 抓 FinMind/TWSE 真實大盤數據（非同步）
   renderDashTable();
   renderFullTable();
   renderRobotCards();

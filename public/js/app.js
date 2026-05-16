@@ -47,27 +47,54 @@ function getDisplayStocks(){
   return TOP300.slice(0,30).map(function(code,i){ return genDemoStock(code,i); }).sort(function(a,b){ return b.ai-a.ai; });
 }
 
-// ── 市場大盤（TWSE 真實資料）──
+// ── 市場大盤（FinMind 加權指數）──
 var marketCache = null;
 
 async function fetchMarketData(){
-  // TWSE 大盤指數（MI_INDEX）
-  var proxy = 'https://corsproxy.io/?';
-  try {
-    // 加權指數
-    var r = await fetch(proxy + encodeURIComponent('https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX'), {signal: AbortSignal.timeout(8000)});
+  try{
+    var token = getFinMindKey();
+    var today = new Date().toISOString().split('T')[0];
+    var past  = new Date(); past.setDate(past.getDate()-3);
+    var pastStr = past.toISOString().split('T')[0];
+
+    var url = new URL(FINMIND_URL);
+    url.searchParams.set('dataset','TaiwanStockTotalReturnIndex'); // 加權含息報酬指數
+    url.searchParams.set('data_id','Y9999');   // 加權指數代號
+    url.searchParams.set('start_date', pastStr);
+    url.searchParams.set('end_date',   today);
+    if(token) url.searchParams.set('token', token);
+
+    var r = await fetch(url.toString(), { signal: AbortSignal.timeout(10000) });
     if(r.ok){
-      var data = await r.json();
-      // 找到發行量加權股價指數
-      var taiex = (data || []).find(function(d){ return d.Index === '發行量加權股價指數' || d.name === '發行量加權股價指數'; });
-      if(taiex){
-        var val    = parseFloat((taiex.IndexOfLatestPrice || taiex.ClosingIndex || '0').replace(/,/g,''));
-        var chgVal = parseFloat((taiex.Change || '0').replace(/[+,]/g,''));
-        var chgPct = val > 0 ? (chgVal/val*100).toFixed(2) : '0.00';
-        marketCache = { taiex: val.toLocaleString('zh-TW'), chg: chgVal, chgPct: chgPct };
+      var json = await r.json();
+      var data = (json.data||[]).filter(function(d){ return d.stock_id==='Y9999'; });
+      if(data.length > 0){
+        var latest = data[data.length-1];
+        var prev   = data.length>1 ? data[data.length-2] : null;
+        var val    = parseFloat(latest.close||0);
+        var chg    = prev ? parseFloat((val - parseFloat(prev.close||0)).toFixed(1)) : 0;
+        var chgPct = val>0 ? (chg/val*100).toFixed(2) : '0.00';
+        marketCache = { taiex: val.toLocaleString('zh-TW'), chg:chg, chgPct:chgPct, date:latest.date };
+        renderMarketStrip();
+        return;
       }
     }
-  } catch(e){ console.warn('TWSE fetch:', e.message); }
+  } catch(e){ console.warn('FinMind index fetch:', e.message); }
+
+  // Fallback: TWSE open API
+  try{
+    var proxy = 'https://corsproxy.io/?';
+    var r2 = await fetch(proxy + encodeURIComponent('https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX'), {signal:AbortSignal.timeout(8000)});
+    if(r2.ok){
+      var d2 = await r2.json();
+      var taiex = (d2||[]).find(function(d){ return d.Index==='發行量加權股價指數'||d.name==='發行量加權股價指數'; });
+      if(taiex){
+        var v = parseFloat((taiex.IndexOfLatestPrice||taiex.ClosingIndex||'0').replace(/,/g,''));
+        var c = parseFloat((taiex.Change||'0').replace(/[+,]/g,''));
+        marketCache = { taiex:v.toLocaleString('zh-TW'), chg:c, chgPct:v>0?(c/v*100).toFixed(2):'0.00', date:'' };
+      }
+    }
+  } catch(e2){ console.warn('TWSE fallback:', e2.message); }
 
   renderMarketStrip();
 }
@@ -283,15 +310,23 @@ function renderFullTable(){
 // ── 掃描器 ──
 async function runScreener(){
   if(screenerRunning){ toast('掃描進行中，請稍候'); return; }
+
+  // 等待股票清單載入
+  if(!stockListLoaded){
+    toast('正在載入股票清單...');
+    await loadStockList();
+  }
+
   var modeEl = document.getElementById('scan-mode');
   var mode   = modeEl ? modeEl.value : 'batch1';
+  var allCodes = TOP300.length > 0 ? TOP300 : Object.keys(LISTED_STOCKS);
 
   var list;
-  if(mode === 'watchlist')     list = watchlist.length>0 ? watchlist : TOP300.slice(0,20);
-  else if(mode === 'batch2')   list = TOP300.slice(50,100);
-  else if(mode === 'batch3')   list = TOP300.slice(100,150);
-  else if(mode === 'top_all')  list = TOP300;
-  else                         list = TOP300.slice(0,50);   // batch1 預設
+  if(mode === 'watchlist')    list = watchlist.length>0 ? watchlist : allCodes.slice(0,30);
+  else if(mode === 'batch2')  list = allCodes.slice(100,200);
+  else if(mode === 'batch3')  list = allCodes.slice(200,300);
+  else if(mode === 'top_all') list = allCodes.slice(0,500);
+  else                        list = allCodes.slice(0,100);  // batch1
 
   screenerRunning = true;
   var prog = document.getElementById('screener-progress');

@@ -187,7 +187,8 @@ function computeScore(code, name, candles){
 
   return {
     code: code, name: name || getStockName(code) || code,
-    price:price, chg:chg, vol:volB, sector:'—',
+    price:price, chg:chg, vol:volB,
+    sector: getStockSector(code),   // 從 FinMind TaiwanStockInfo 取得產業別
     tech:Math.min(35,tech), chip:Math.min(30,chip),
     vol_score:Math.min(20,vol_score), risk_score:risk_score,
     ai:ai, boom:boom,

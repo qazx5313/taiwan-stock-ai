@@ -176,11 +176,11 @@
       <div class="pt" style="margin-bottom:0;">全台股掃描 · 爆升選股器</div>
       <div style="display:flex;gap:6px;align-items:center;">
         <div id="scan-mode-wrap">
-          <select class="form-input" id="scan-mode" style="width:160px;padding:5px 8px;font-size:11px;">
-            <option value="top300">前300大市值</option>
-            <option value="batch1">批次掃描 1-100</option>
-            <option value="batch2">批次掃描 101-200</option>
-            <option value="batch3">批次掃描 201-300</option>
+          <select class="form-input" id="scan-mode" style="width:200px;padding:5px 8px;font-size:11px;">
+            <option value="batch1">前100檔（快速，約3分鐘）</option>
+            <option value="batch2">101～200檔</option>
+            <option value="batch3">201～300檔</option>
+            <option value="top_all">全部上市上櫃（需較長時間）</option>
             <option value="watchlist">自選股清單</option>
           </select>
         </div>
@@ -200,7 +200,11 @@
       <button class="ft" onclick="sortFull('chip',this)">籌碼↓</button>
       <button class="ft" onclick="sortFull('low_risk',this)">低風險</button>
     </div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:8px;">掃描結果：<span id="scan-result-count" style="color:var(--accent2);">0</span> 檔 · 符合條件：<span id="scan-match-count" style="color:var(--green);">0</span> 檔</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:8px;">
+      上市上櫃清單：<span id="total-stock-count" style="color:var(--accent);">載入中...</span> ·
+      掃描結果：<span id="scan-result-count" style="color:var(--accent2);">0</span> 檔 ·
+      符合條件：<span id="scan-match-count" style="color:var(--green);">0</span> 檔
+    </div>
     <div class="tw"><table>
       <thead><tr><th>名稱</th><th>代號</th><th>現價</th><th>漲跌%</th><th>量(億)</th><th>技術/35</th><th>籌碼/30</th><th>量價/20</th><th>風控/15</th><th>AI分</th><th>爆升率</th><th>信號</th><th>入場</th><th>目標一</th><th>停損</th><th>風險</th><th>操作</th></tr></thead>
       <tbody id="full-tbody"></tbody>
@@ -263,8 +267,9 @@
       </div>
     </div>
     <div>
-      <div class="panel" style="margin-bottom:13px;">
-        <div class="pt">報告管理</div>
+      <!-- 管理員操作區：一般用戶隱藏 -->
+      <div class="panel" style="margin-bottom:13px;" id="report-admin-panel">
+        <div class="pt">報告管理 <span class="badge b-admin">管理員</span></div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           <button class="btn" onclick="genAIReport()">🤖 AI 產生今日報告</button>
           <button class="btn-g" onclick="publishReport()" id="pub-btn" disabled>✓ 發布到前台</button>
