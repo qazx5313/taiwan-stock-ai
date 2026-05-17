@@ -345,11 +345,22 @@ async function loadFromSupabase(){
   var statusEl = document.getElementById('screener-status');
   var prog = document.getElementById('screener-progress');
   if(prog) prog.style.display = 'block';
-  if(statusEl) statusEl.textContent = '從 Supabase 讀取今日快取...';
+  if(statusEl) statusEl.textContent = '從 Supabase 讀取最新掃描資料...';
 
   try{
-    // 取最新一天的資料
-    var r = await fetch(sbUrl + '/rest/v1/stock_scores?select=*&order=total_score.desc&limit=1000', {
+    // 先取最新的日期
+    var dateR = await fetch(sbUrl + '/rest/v1/stock_scores?select=date&order=date.desc&limit=1', {
+      headers:{ 'apikey':sbKey, 'Authorization':'Bearer '+sbKey }
+    });
+    if(!dateR.ok) throw new Error('HTTP '+dateR.status);
+    var dateData = await dateR.json();
+    if(!dateData || dateData.length === 0){ if(prog) prog.style.display='none'; return false; }
+    var latestDate = dateData[0].date;
+
+    if(statusEl) statusEl.textContent = '讀取 '+latestDate+' 的掃描資料...';
+
+    // 只取最新日期的資料（無 limit 限制，最多2000筆）
+    var r = await fetch(sbUrl + '/rest/v1/stock_scores?select=*&date=eq.'+latestDate+'&order=total_score.desc&limit=2000', {
       headers:{ 'apikey':sbKey, 'Authorization':'Bearer '+sbKey }
     });
     if(!r.ok) throw new Error('HTTP '+r.status);
@@ -407,7 +418,7 @@ async function loadFromSupabase(){
     if(stocks.length > 0) setFeatured(stocks[0].code);
 
     // 顯示快取日期
-    var cacheDate = data[0] && data[0].date ? data[0].date : '—';
+    var cacheDate = latestDate || '—';
     toast('✅ 讀取快取：'+stocks.length+'檔（'+cacheDate+'）');
     return true;
 
